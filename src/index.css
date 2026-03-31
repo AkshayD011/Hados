@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand Colors - Amrita Inspired but Premium */
+  --primary: #9b2242;
+  /* Amrita Maroon/Red */
+  --primary-light: #c23158;
+  --primary-dark: #6e152d;
+  --secondary: #2c3e50;
+  --accent: #f39c12;
+
+  /* Neutrals & Surfaces */
+  --background: #f4f6f9;
+  --surface: #ffffff;
+  --surface-hover: #fcfcfc;
+  /* Text */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+
+  /* Background Glows */
+  --glow-1: rgba(155, 34, 66, 0.25);
+  --glow-2: rgba(44, 62, 80, 0.15);
+
+  /* Semantic */
+  --border: #e2e8f0;
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+
+  /* Effects */
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  --input-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme='dark'] {
+  /* Brand Colors */
+  --primary: #c23158; /* Lighter maroon for better contrast */
+  --primary-light: #e04a73;
+  --primary-dark: #9b2242;
+  --secondary: #94a3b8;
+  --accent: #fbbf24;
+
+  /* Neutrals & Surfaces */
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+
+  /* Background Glows */
+  --glow-1: rgba(194, 49, 88, 0.3);
+  --glow-2: rgba(148, 163, 184, 0.15);
+
+  /* Semantic */
+  --border: #334155;
+
+  /* Effects */
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --input-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --glass-bg: rgba(30, 41, 59, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 14px 0 rgba(155, 34, 66, 0.39);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 34, 66, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+/* Base Card Styling */
+.card-base {
+  background-color: var(--surface);
+  border-radius: 1.25rem;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Input Focus States */
+input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(155, 34, 66, 0.1) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Interactive Background System */
+.interactive-bg-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--background);
+  background-image: 
+    radial-gradient(circle at 0% 20%, var(--glow-1) 0%, transparent 60%),
+    radial-gradient(circle at 100% 80%, var(--glow-2) 0%, transparent 60%),
+    radial-gradient(circle at 80% 10%, rgba(243, 156, 18, 0.1) 0%, transparent 40%);
+}
+
+.grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-size: 40px 40px;
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  opacity: 0.8;
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+}
+
+.mouse-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50vw) var(--mouse-y, 50vh),
+    rgba(155, 34, 66, 0.08),
+    transparent 40%
+  );
+  transition: background 0.1s ease;
+}
