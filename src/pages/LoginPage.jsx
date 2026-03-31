@@ -263,7 +263,7 @@ const LoginPage = () => {
                                     <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Full Name</label>
                                     <input
                                         type="text"
-                                        placeholder="John Doe"
+                                        placeholder="ex: John Doe"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         required
@@ -274,7 +274,7 @@ const LoginPage = () => {
                                     <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Roll No</label>
                                     <input
                                         type="text"
-                                        placeholder="AM.EN.U4C..."
+                                        placeholder="ex: BL.EN.U4C..."
                                         value={rollNo}
                                         onChange={(e) => setRollNo(e.target.value)}
                                         required
@@ -283,14 +283,23 @@ const LoginPage = () => {
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Department</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. CSE / AI"
+                                    <select
                                         value={dept}
                                         onChange={(e) => setDept(e.target.value)}
                                         required
-                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
-                                    />
+                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none', backgroundColor: 'white' }}
+                                    >
+                                        <option value="">Select Department</option>
+                                        <option value="AID">AID</option>
+                                        <option value="AIE">AIE</option>
+                                        <option value="CSE">CSE</option>
+                                        <option value="EAC">EAC</option>
+                                        <option value="ECE">ECE</option>
+                                        <option value="EEE">EEE</option>
+                                        <option value="ELC">ELC</option>
+                                        <option value="MEE">MEE</option>
+                                        <option value="RAE">RAE</option>
+                                    </select>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Year</label>
@@ -316,7 +325,7 @@ const LoginPage = () => {
                         <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>University Email</label>
                         <input
                             type="email"
-                            placeholder="name@bl.students.amrita.edu"
+                            placeholder=" ex: bl.en.u4...@bl.students.amrita.edu"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
