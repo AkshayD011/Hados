@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, GraduationCap, AlertCircle } from 'lucide-react';
+import { LogIn, UserPlus, GraduationCap, AlertCircle, Mail, RefreshCcw, LogOut, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LoginPage = () => {
@@ -19,7 +19,7 @@ const LoginPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login, register, isAuthenticated } = useAuth();
+    const { login, register, logout, resendVerification, checkVerification, isAuthenticated, verificationPending, user } = useAuth();
     const navigate = useNavigate();
 
     // ✅ FIXED: useEffect imported
@@ -116,7 +116,116 @@ const LoginPage = () => {
                     </p>
                 </div>
 
-                {/* Success Message */}
+                {verificationPending ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        style={{ textAlign: 'center' }}
+                    >
+                        <div style={{ 
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)', 
+                            padding: '2rem', 
+                            borderRadius: '1rem',
+                            marginBottom: '2rem',
+                            border: '1px dashed var(--primary-light)'
+                        }}>
+                            <Mail size={48} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Verify your email</h2>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                We've sent a verification link to:<br/>
+                                <strong style={{ color: 'var(--text-primary)' }}>{user?.email}</strong>
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <button 
+                                onClick={async () => {
+                                    setLoading(true);
+                                    await checkVerification();
+                                    setLoading(false);
+                                }}
+                                disabled={loading}
+                                className="btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                                <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
+                                I've verified my email
+                            </button>
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button 
+                                    onClick={async () => {
+                                        await resendVerification();
+                                        setSuccessMessage('Verification email resent!');
+                                    }}
+                                    style={{ 
+                                        flex: 1,
+                                        padding: '0.75rem', 
+                                        borderRadius: '0.5rem', 
+                                        border: '1px solid var(--border)',
+                                        background: 'transparent',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Resend Email
+                                </button>
+
+                                <button 
+                                    onClick={logout}
+                                    style={{ 
+                                        flex: 1,
+                                        padding: '0.75rem', 
+                                        borderRadius: '0.5rem', 
+                                        border: '1px solid var(--error)',
+                                        background: 'transparent',
+                                        color: 'var(--error)',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                >
+                                    <LogOut size={16} />
+                                    Logout
+                                </button>
+                            </div>
+
+                            <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                Wrong email? 
+                                <button
+                                    onClick={() => {
+                                        logout();
+                                        setIsRegistering(true);
+                                    }}
+                                    style={{ 
+                                        marginLeft: '0.5rem',
+                                        color: 'var(--primary)', 
+                                        fontWeight: '600', 
+                                        background: 'none', 
+                                        border: 'none', 
+                                        cursor: 'pointer', 
+                                        padding: 0 
+                                    }}
+                                >
+                                    Register again
+                                </button>
+                            </p>
+                        </div>
+
+                        {successMessage && (
+                            <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                <CheckCircle size={14} /> {successMessage}
+                            </p>
+                        )}
+                    </motion.div>
+                ) : (
+                    <>
+                        {/* Success Message */}
                 {successMessage && (
                     <div
                         style={{
@@ -264,6 +373,8 @@ const LoginPage = () => {
                         {isRegistering ? 'Sign In' : 'Register'}
                     </button>
                 </div>
+            </>
+        )}
             </motion.div>
         </div>
     );

@@ -16,6 +16,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [verificationPending, setVerificationPending] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -23,20 +24,32 @@ export const AuthProvider = ({ children }) => {
             if (firebaseUser) {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-                    if (userDoc.exists()) {
-                        setUser({ 
-                            uid: firebaseUser.uid, 
-                            emailVerified: firebaseUser.emailVerified, 
-                            ...userDoc.data() 
-                        });
+                    
+                    if (firebaseUser.emailVerified) {
+                        if (userDoc.exists()) {
+                            setUser({ 
+                                uid: firebaseUser.uid, 
+                                emailVerified: true, 
+                                ...userDoc.data() 
+                            });
+                        } else {
+                            setUser({ 
+                                uid: firebaseUser.uid, 
+                                email: firebaseUser.email, 
+                                emailVerified: true 
+                            });
+                        }
                         setIsAuthenticated(true);
+                        setVerificationPending(false);
                     } else {
+                        // Email not verified yet
                         setUser({ 
                             uid: firebaseUser.uid, 
                             email: firebaseUser.email, 
-                            emailVerified: firebaseUser.emailVerified 
+                            emailVerified: false 
                         });
-                        setIsAuthenticated(true);
+                        setIsAuthenticated(false);
+                        setVerificationPending(true);
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
@@ -44,6 +57,7 @@ export const AuthProvider = ({ children }) => {
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
+                setVerificationPending(false);
             }
             setLoading(false);
         });
@@ -101,13 +115,34 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const resendVerification = async () => {
+        if (auth.currentUser) {
+            await sendEmailVerification(auth.currentUser);
+        }
+    };
+
+    const checkVerification = async () => {
+        if (auth.currentUser) {
+            await auth.currentUser.reload();
+            // Manually trigger the current state changed logic
+            const updatedUser = auth.currentUser;
+            if (updatedUser.emailVerified) {
+                setVerificationPending(false);
+                // The onAuthStateChanged listener will handle the rest on the next cycle/reload
+            }
+        }
+    };
+
     const value = {
         user,
         isAuthenticated,
+        verificationPending,
         loading,
         register,
         login,
-        logout
+        logout,
+        resendVerification,
+        checkVerification
     };
 
     return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
