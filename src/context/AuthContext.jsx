@@ -5,7 +5,8 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     signOut,
-    sendEmailVerification 
+    sendEmailVerification,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -70,6 +71,7 @@ export const AuthProvider = ({ children }) => {
             throw new Error('Only university emails (@bl.students.amrita.edu) are allowed. Please use your official university email to register.');
         }
 
+        // eslint-disable-next-line no-useless-catch
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
@@ -99,6 +101,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = async (email, password) => {
+        // eslint-disable-next-line no-useless-catch
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             return userCredential.user;
@@ -133,6 +136,15 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const resetPassword = async (email) => {
+        // eslint-disable-next-line no-useless-catch
+        try {
+            await sendPasswordResetEmail(auth, email);
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const value = {
         user,
         isAuthenticated,
@@ -142,7 +154,8 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         resendVerification,
-        checkVerification
+        checkVerification,
+        resetPassword
     };
 
     return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;

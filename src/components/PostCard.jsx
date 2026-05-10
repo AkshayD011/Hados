@@ -8,6 +8,7 @@ const PostCard = ({ post }) => {
     const { user } = useAuth();
     
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsBookmarked(post.bookmarked || false);
     }, [post.bookmarked]);
 

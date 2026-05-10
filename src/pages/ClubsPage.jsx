@@ -21,6 +21,18 @@ const ClubsPage = () => {
         fetchClubs();
     }, []);
 
+    const handleJoin = async (e, clubId) => {
+        e.stopPropagation();
+        try {
+            const result = await api.clubs.joinClub(clubId);
+            if (result.success) {
+                setClubs(prev => prev.map(c => c.id === clubId ? { ...c, memberCount: result.newCount } : c));
+            }
+        } catch (error) {
+            console.error("Failed to join club", error);
+        }
+    };
+
     return (
         <div className="clubs-page animate-fade-in" style={{ paddingBottom: '2rem' }}>
             <div style={{ marginBottom: '1.5rem' }}>
@@ -69,7 +81,24 @@ const ClubsPage = () => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                     <Users size={16} /> <span>{club.memberCount} Members</span>
                                 </div>
-                                <ChevronRight size={18} color="var(--primary)" />
+                                <button 
+                                    onClick={(e) => handleJoin(e, club.id)}
+                                    style={{
+                                        padding: '0.4rem 1rem',
+                                        borderRadius: '0.5rem',
+                                        backgroundColor: 'var(--primary)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: '600',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        transition: 'opacity 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
+                                    onMouseLeave={(e) => e.currentTarget.style.opacity = 1}
+                                >
+                                    Join
+                                </button>
                             </div>
                         </div>
                     ))}

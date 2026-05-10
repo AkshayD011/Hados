@@ -1,28 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Search, Plus, Filter, MapPin, Clock, Tag } from 'lucide-react';
+import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const LostFoundPage = () => {
+    const { user } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState('All'); // All, Lost, Found
     const [showReportModal, setShowReportModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [imageFile, setImageFile] = useState(null);
+    const [reportData, setReportData] = useState({
+        title: '',
+        category: 'Electronics',
+        status: 'Lost',
+        location: '',
+        description: ''
+    });
+
+    const fetchItems = async () => {
+        try {
+            setLoading(true);
+            const data = await api.lostFound.getItems();
+            setItems(data);
+        } catch (error) {
+            console.error("Failed to fetch lost/found items", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchItems = async () => {
-            try {
-                const data = await api.lostFound.getItems();
-                setItems(data);
-            } catch (error) {
-                console.error("Failed to fetch lost/found items", error);
-            } finally {
-                setLoading(false);
-            }
+        const initialize = async () => {
+            await api.lostFound.migrateEmails();
+            fetchItems();
         };
-
-        fetchItems();
+        initialize();
     }, []);
+
+    const handleReportSubmit = async (e) => {
+        e.preventDefault();
+        if (!reportData.title || !reportData.location) return;
+
+        try {
+            setSubmitting(true);
+            const itemToReport = {
+                ...reportData,
+                user: user?.name || 'Anonymous Student',
+                uid: user?.uid,
+                userEmail: user?.email || null
+            };
+            await api.lostFound.reportItem(itemToReport, imageFile);
+            setShowReportModal(false);
+            setReportData({
+                title: '',
+                category: 'Electronics',
+                status: 'Lost',
+                location: '',
+                description: ''
+            });
+            setImageFile(null);
+            fetchItems(); // Refresh feed
+        } catch (error) {
+            console.error("Error reporting item", error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (itemId) => {
+        if (!window.confirm('Are you sure you want to delete this post?')) return;
+        try {
+            await api.lostFound.deleteItem(itemId);
+            setItems(items.filter(item => item.id !== itemId));
+        } catch (error) {
+            console.error("Failed to delete item", error);
+        }
+    };
 
     const filteredItems = items.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -137,6 +193,11 @@ const LostFoundPage = () => {
                                         {item.status}
                                     </span>
                                 </div>
+                                {item.imageUrl && (
+                                    <div style={{ marginBottom: '0.75rem' }}>
+                                        <img src={item.imageUrl} alt={item.title} style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid var(--border)' }} />
+                                    </div>
+                                )}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <MapPin size={16} /> <span>{item.location}</span>
@@ -145,8 +206,48 @@ const LostFoundPage = () => {
                                         <Tag size={16} /> <span>{item.category}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                                        <Clock size={16} color="var(--accent)" /> <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Reported {item.date} by {item.user}</span>
+                                        <Clock size={16} color="var(--accent)" /> <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Reported {item.createdAt ? new Date(item.createdAt).toLocaleString() : item.date} by {item.user}</span>
                                     </div>
+                                    {(!item.uid || item.uid === user?.uid) && (
+                                        <button 
+                                            onClick={() => handleDelete(item.id)}
+                                            style={{ 
+                                                marginTop: '0.5rem', 
+                                                padding: '0.4rem 0.75rem', 
+                                                borderRadius: '0.5rem', 
+                                                border: `1px solid ${item.status === 'Lost' ? 'var(--success)' : '#f44336'}`, 
+                                                backgroundColor: 'transparent', 
+                                                color: item.status === 'Lost' ? 'var(--success)' : '#f44336', 
+                                                fontWeight: '600', 
+                                                cursor: 'pointer', 
+                                                alignSelf: 'flex-start',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            {item.status === 'Lost' ? 'I found it !' : 'Delete Post'}
+                                        </button>
+                                    )}
+                                    {item.uid && item.uid !== user?.uid && item.userEmail && (
+                                        <a 
+                                            href={`mailto:${item.userEmail}?subject=Regarding your ${item.status} item on Hados: ${item.title}`}
+                                            style={{ 
+                                                marginTop: '0.5rem', 
+                                                padding: '0.4rem 0.75rem', 
+                                                borderRadius: '0.5rem', 
+                                                backgroundColor: 'var(--primary)', 
+                                                color: 'white', 
+                                                fontWeight: '600', 
+                                                textDecoration: 'none',
+                                                alignSelf: 'flex-start',
+                                                fontSize: '0.8rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.4rem'
+                                            }}
+                                        >
+                                            <Mail size={14} /> Contact Poster
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -154,25 +255,91 @@ const LostFoundPage = () => {
                 </div>
             )}
 
-            {/* Mock Report Modal */}
+            {/* Report Modal */}
             {showReportModal && (
                 <div style={{
                     position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
                 }}>
-                    <div className="glass card-base animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '1.5rem' }}>Report Item</h2>
-                        <input type="text" placeholder="Item Title (e.g. Lost Wallet)" style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} />
-                        <select style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', backgroundColor: 'white' }}>
-                            <option>Status: Lost</option>
-                            <option>Status: Found</option>
-                        </select>
-                        <input type="text" placeholder="Location" style={{ width: '100%', padding: '0.75rem', marginBottom: '1.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} />
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button className="btn-secondary" style={{ flex: 1, backgroundColor: '#f1f3f5', border: 'none' }} onClick={() => setShowReportModal(false)}>Cancel</button>
-                            <button className="btn-primary" style={{ flex: 1 }} onClick={() => setShowReportModal(false)}>Submit</button>
+                    <form onSubmit={handleReportSubmit} className="glass card-base animate-fade-in" style={{ width: '100%', maxWidth: '450px', padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Report Item</h2>
+                            <button type="button" onClick={() => setShowReportModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                                <X size={24} />
+                            </button>
                         </div>
-                    </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <input 
+                                type="text" 
+                                placeholder="Item Title (e.g. Lost Black Wallet)" 
+                                value={reportData.title}
+                                onChange={(e) => setReportData({...reportData, title: e.target.value})}
+                                required
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} 
+                            />
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <select 
+                                    value={reportData.status}
+                                    onChange={(e) => setReportData({...reportData, status: e.target.value})}
+                                    style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', backgroundColor: 'white' }}
+                                >
+                                    <option value="Lost">I Lost This</option>
+                                    <option value="Found">I Found This</option>
+                                </select>
+                                <select 
+                                    value={reportData.category}
+                                    onChange={(e) => setReportData({...reportData, category: e.target.value})}
+                                    style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', backgroundColor: 'white' }}
+                                >
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="ID Card">ID Card</option>
+                                    <option value="Accessories">Accessories</option>
+                                    <option value="Books/Notes">Books/Notes</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <input 
+                                type="text" 
+                                placeholder="Last seen / Found Location" 
+                                value={reportData.location}
+                                onChange={(e) => setReportData({...reportData, location: e.target.value})}
+                                required
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} 
+                            />
+                            <textarea 
+                                placeholder="Description (Color, brand, identifying marks...)" 
+                                value={reportData.description}
+                                onChange={(e) => setReportData({...reportData, description: e.target.value})}
+                                rows={3}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', fontFamily: 'inherit', resize: 'vertical' }} 
+                            />
+                            {reportData.status === 'Found' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Upload Image (Optional)</label>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        onChange={(e) => setImageFile(e.target.files[0])}
+                                        style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)', backgroundColor: 'white' }} 
+                                    />
+                                    {imageFile && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontSize: '0.875rem', fontWeight: '500', marginTop: '0.25rem' }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            Image attached: {imageFile.name}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button type="button" className="btn-secondary" style={{ flex: 1, backgroundColor: '#f1f3f5', border: 'none' }} onClick={() => setShowReportModal(false)}>Cancel</button>
+                            <button type="submit" className="btn-primary" style={{ flex: 1 }} disabled={submitting}>
+                                {submitting ? 'Submitting...' : 'Post Report'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

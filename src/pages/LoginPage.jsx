@@ -19,7 +19,7 @@ const LoginPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login, register, logout, resendVerification, checkVerification, isAuthenticated, verificationPending, user } = useAuth();
+    const { login, register, logout, resendVerification, checkVerification, isAuthenticated, verificationPending, user, resetPassword } = useAuth();
     const navigate = useNavigate();
 
     // ✅ FIXED: useEffect imported
@@ -44,7 +44,38 @@ const LoginPage = () => {
                 await login(email, password);
             }
         } catch (err) {
-            setError(err.message || "Something went wrong");
+            let errorMsg = err.message || "Something went wrong";
+            if (errorMsg.includes('auth/invalid-credential')) {
+                errorMsg = "Email or Password is incorrect.";
+            } else if (errorMsg.includes('auth/user-not-found')) {
+                errorMsg = "No account found with this email.";
+            } else if (errorMsg.includes('auth/wrong-password')) {
+                errorMsg = "Password is incorrect.";
+            } else if (errorMsg.includes('auth/email-already-in-use')) {
+                errorMsg = "An account already exists with this email.";
+            } else if (errorMsg.includes('auth/weak-password')) {
+                errorMsg = "Password should be at least 6 characters.";
+            } else if (errorMsg.includes('auth/network-request-failed')) {
+                errorMsg = "Network error. Please check your internet connection.";
+            }
+            setError(errorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            setError("Please enter your university email first to reset your password.");
+            return;
+        }
+        try {
+            setLoading(true);
+            setError('');
+            await resetPassword(email);
+            setSuccessMessage("A password reset link has been sent to your email.");
+        } catch (err) {
+            setError(err.message || "Failed to send reset email.");
         } finally {
             setLoading(false);
         }
@@ -340,9 +371,27 @@ const LoginPage = () => {
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            required
+                            required={!isRegistering} // allow required only if not clicking forgot password
                             style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
                         />
+                        {!isRegistering && (
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                style={{
+                                    alignSelf: 'flex-end',
+                                    fontSize: '0.8rem',
+                                    color: 'var(--primary)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    marginTop: '-0.25rem'
+                                }}
+                            >
+                                Forgot Password?
+                            </button>
+                        )}
                     </div>
 
                     {/* Error */}
