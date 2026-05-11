@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, GraduationCap, Mail, RefreshCcw, LogOut } from 'lucide-react';
+import { LogIn, UserPlus, GraduationCap, Mail, RefreshCcw, LogOut, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { FieldError, inputBorderStyle, PasswordStrengthBar } from '../components/ui/FormField';
+import useFormValidation, { required, minLength, isEmail, isUniversityEmail, combine, passwordStrength } from '../hooks/useFormValidation';
+
+// ─── Base input style reused across all fields ─────────────────────────────
+const baseInput = {
+    padding: '0.75rem',
+    borderRadius: '0.5rem',
+    border: '1px solid var(--border)',
+    width: '100%',
+    fontSize: '0.9375rem',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--text-primary)',
+};
 
 const LoginPage = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -15,23 +28,54 @@ const LoginPage = () => {
     const [year, setYear] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [touched, setTouched] = useState({});
 
     const [loading, setLoading] = useState(false);
 
     const { login, register, logout, resendVerification, checkVerification, isAuthenticated, verificationPending, user, resetPassword } = useAuth();
     const navigate = useNavigate();
 
-    // ✅ FIXED: useEffect imported
+    // ─── Validation rules ───────────────────────────────────────────────────
+    const loginRules = {
+        email: combine(required('Email'), isEmail, isUniversityEmail),
+        password: required('Password'),
+    };
+
+    const registerRules = {
+        name: combine(required('Full name'), minLength('Full name', 3)),
+        rollNo: combine(required('Roll number'), (v) =>
+            v && !/^BL\.EN\.[A-Z][0-9][A-Z]+[0-9]+$/i.test(v)
+                ? 'Enter a valid roll number (e.g. BL.EN.U4CSE21001).'
+                : null
+        ),
+        dept: required('Department'),
+        year: required('Year'),
+        email: combine(required('Email'), isEmail, isUniversityEmail),
+        password: combine(required('Password'), passwordStrength),
+    };
+
+    const { errors, validate, clearFieldError, clearErrors } = useFormValidation(
+        isRegistering ? registerRules : loginRules
+    );
+
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/');
-        }
+        if (isAuthenticated) navigate('/');
     }, [isAuthenticated, navigate]);
+
+    const markTouched = (field) => setTouched(prev => ({ ...prev, [field]: true }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
+        const values = isRegistering
+            ? { name, rollNo, dept, year, email, password }
+            : { email, password };
+
+        const isValid = validate(values);
+        if (!isValid) return; // Stop — inline errors already shown
+
+        setLoading(true);
         try {
             if (isRegistering) {
                 await register(email, password, rollNo, name, dept, year);
@@ -42,41 +86,64 @@ const LoginPage = () => {
                 toast.success('Signed in successfully!');
             }
         } catch (err) {
-            let errorMsg = err.message || "Something went wrong";
-            if (errorMsg.includes('auth/invalid-credential')) {
-                errorMsg = "Email or Password is incorrect.";
+            let errorMsg = err.message || 'Something went wrong';
+            if (errorMsg.includes('auth/invalid-credential') || errorMsg.includes('auth/wrong-password')) {
+                errorMsg = 'Email or password is incorrect.';
             } else if (errorMsg.includes('auth/user-not-found')) {
-                errorMsg = "No account found with this email.";
-            } else if (errorMsg.includes('auth/wrong-password')) {
-                errorMsg = "Password is incorrect.";
+                errorMsg = 'No account found with this email.';
             } else if (errorMsg.includes('auth/email-already-in-use')) {
-                errorMsg = "An account already exists with this email.";
+                errorMsg = 'An account already exists with this email.';
             } else if (errorMsg.includes('auth/weak-password')) {
-                errorMsg = "Password should be at least 6 characters.";
+                errorMsg = 'Password should be at least 8 characters.';
             } else if (errorMsg.includes('auth/network-request-failed')) {
-                errorMsg = "Network error. Please check your internet connection.";
+                errorMsg = 'Network error. Please check your connection.';
+            } else if (errorMsg.includes('auth/too-many-requests')) {
+                errorMsg = 'Too many attempts. Please wait a moment and try again.';
             }
-            toast.error(errorMsg);
+            toast.error(errorMsg, { duration: 5000 });
         } finally {
             setLoading(false);
         }
     };
 
     const handleForgotPassword = async () => {
-        if (!email) {
-            toast.error("Please enter your university email first to reset your password.");
+        const emailErr = combine(required('Email'), isEmail)(email);
+        if (emailErr) {
+            toast.error('Enter your university email above first.');
             return;
         }
         try {
             setLoading(true);
             await resetPassword(email);
-            toast.success("A password reset link has been sent to your email.");
+            toast.success('Password reset link sent! Check your inbox.');
         } catch (err) {
-            toast.error(err.message || "Failed to send reset email.");
+            toast.error(err.message || 'Failed to send reset email.');
         } finally {
             setLoading(false);
         }
     };
+
+    const switchMode = () => {
+        setIsRegistering(!isRegistering);
+        setName(''); setRollNo(''); setDept(''); setYear('');
+        setEmail(''); setPassword('');
+        setTouched({});
+        clearErrors();
+    };
+
+    // ─── Shared input+error block ───────────────────────────────────────────
+    const Field = ({ id, label, required: req, hint, children }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                {label}{req && <span style={{ color: 'var(--error)', marginLeft: '2px' }}>*</span>}
+            </label>
+            {children}
+            <FieldError error={errors[id]} />
+            {hint && !errors[id] && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{hint}</span>
+            )}
+        </div>
+    );
 
     return (
         <div
@@ -105,141 +172,63 @@ const LoginPage = () => {
                 }}
             >
                 {/* Background glow */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '-50px',
-                        right: '-50px',
-                        width: '150px',
-                        height: '150px',
-                        borderRadius: '50%',
-                        background: 'radial-gradient(circle, var(--primary-light) 0%, transparent 70%)',
-                        opacity: 0.1
-                    }}
-                />
+                <div style={{
+                    position: 'absolute', top: '-50px', right: '-50px',
+                    width: '150px', height: '150px', borderRadius: '50%',
+                    background: 'radial-gradient(circle, var(--primary-light) 0%, transparent 70%)',
+                    opacity: 0.1, pointerEvents: 'none'
+                }} />
 
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div
-                        style={{
-                            display: 'inline-flex',
-                            padding: '1rem',
-                            backgroundColor: 'var(--primary)',
-                            borderRadius: '1rem',
-                            marginBottom: '1rem',
-                            color: 'white'
-                        }}
-                    >
+                    <div style={{
+                        display: 'inline-flex', padding: '1rem',
+                        backgroundColor: 'var(--primary)', borderRadius: '1rem',
+                        marginBottom: '1rem', color: 'white'
+                    }}>
                         <GraduationCap size={40} />
                     </div>
-
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)' }}>
-                        Hados
-                    </h1>
-
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                        {isRegistering
-                            ? 'Create your university account'
-                            : 'Sign in to Mailer Daemon'}
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)' }}>Hados</h1>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                        {isRegistering ? 'Create your university account' : 'Sign in to Mailer Daemon'}
                     </p>
                 </div>
 
                 {verificationPending ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        style={{ textAlign: 'center' }}
-                    >
-                        <div style={{ 
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)', 
-                            padding: '2rem', 
-                            borderRadius: '1rem',
-                            marginBottom: '2rem',
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center' }}>
+                        <div style={{
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)', padding: '2rem',
+                            borderRadius: '1rem', marginBottom: '2rem',
                             border: '1px dashed var(--primary-light)'
                         }}>
                             <Mail size={48} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
                             <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>Verify your email</h2>
                             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                                We've sent a verification link to:<br/>
+                                We've sent a verification link to:<br />
                                 <strong style={{ color: 'var(--text-primary)' }}>{user?.email}</strong>
                             </p>
                         </div>
-
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <button 
-                                onClick={async () => {
-                                    setLoading(true);
-                                    await checkVerification();
-                                    setLoading(false);
-                                }}
-                                disabled={loading}
-                                className="btn-primary"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            >
+                            <button onClick={async () => { setLoading(true); await checkVerification(); setLoading(false); }}
+                                disabled={loading} className="btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                                 <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
                                 I've verified my email
                             </button>
-
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <button 
-                                    onClick={async () => {
-                                        await resendVerification();
-                                        toast.success('Verification email resent!');
-                                    }}
-                                    style={{ 
-                                        flex: 1,
-                                        padding: '0.75rem', 
-                                        borderRadius: '0.5rem', 
-                                        border: '1px solid var(--border)',
-                                        background: 'transparent',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        cursor: 'pointer'
-                                    }}
-                                >
+                                <button onClick={async () => { await resendVerification(); toast.success('Verification email resent!'); }}
+                                    style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'transparent', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' }}>
                                     Resend Email
                                 </button>
-
-                                <button 
-                                    onClick={logout}
-                                    style={{ 
-                                        flex: 1,
-                                        padding: '0.75rem', 
-                                        borderRadius: '0.5rem', 
-                                        border: '1px solid var(--error)',
-                                        background: 'transparent',
-                                        color: 'var(--error)',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.5rem'
-                                    }}
-                                >
-                                    <LogOut size={16} />
-                                    Logout
+                                <button onClick={logout}
+                                    style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--error)', background: 'transparent', color: 'var(--error)', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                    <LogOut size={16} /> Logout
                                 </button>
                             </div>
-
-                            <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                Wrong email? 
-                                <button
-                                    onClick={() => {
-                                        logout();
-                                        setIsRegistering(true);
-                                    }}
-                                    style={{ 
-                                        marginLeft: '0.5rem',
-                                        color: 'var(--primary)', 
-                                        fontWeight: '600', 
-                                        background: 'none', 
-                                        border: 'none', 
-                                        cursor: 'pointer', 
-                                        padding: 0 
-                                    }}
-                                >
+                            <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                Wrong email?
+                                <button onClick={() => { logout(); setIsRegistering(true); }}
+                                    style={{ marginLeft: '0.5rem', color: 'var(--primary)', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                                     Register again
                                 </button>
                             </p>
@@ -247,157 +236,150 @@ const LoginPage = () => {
                     </motion.div>
                 ) : (
                     <>
-                        <form
-                    onSubmit={handleSubmit}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-                >
-                    {/* Register Fields */}
-                    <AnimatePresence>
-                        {isRegistering && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="grid-1-col-md"
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr 1fr',
-                                    gap: '1.25rem'
-                                }}
-                            >
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Full Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="ex: John Doe"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required
-                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Roll No</label>
-                                    <input
-                                        type="text"
-                                        placeholder="ex: BL.EN.U4C..."
-                                        value={rollNo}
-                                        onChange={(e) => setRollNo(e.target.value)}
-                                        required
-                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Department</label>
-                                    <select
-                                        value={dept}
-                                        onChange={(e) => setDept(e.target.value)}
-                                        required
-                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none', backgroundColor: 'white' }}
-                                    >
-                                        <option value="">Select Department</option>
-                                        <option value="AID">AID</option>
-                                        <option value="AIE">AIE</option>
-                                        <option value="CSE">CSE</option>
-                                        <option value="EAC">EAC</option>
-                                        <option value="ECE">ECE</option>
-                                        <option value="EEE">EEE</option>
-                                        <option value="ELC">ELC</option>
-                                        <option value="MEE">MEE</option>
-                                        <option value="RAE">RAE</option>
-                                    </select>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Year</label>
-                                    <select
-                                        value={year}
-                                        onChange={(e) => setYear(e.target.value)}
-                                        required
-                                        style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none', backgroundColor: 'white' }}
-                                    >
-                                        <option value="">Year</option>
-                                        <option value="1st Year">1st Year</option>
-                                        <option value="2nd Year">2nd Year</option>
-                                        <option value="3rd Year">3rd Year</option>
-                                        <option value="4th Year">4th Year</option>
-                                    </select>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-                    {/* Common Fields */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>University Email</label>
-                        <input
-                            type="email"
-                            placeholder=" ex: bl.en.u4...@bl.students.amrita.edu"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
-                        />
-                    </div>
+                            {/* ── Register-only fields ─────────────────────── */}
+                            <AnimatePresence>
+                                {isRegistering && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="grid-1-col-md"
+                                        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}
+                                    >
+                                        <Field id="name" label="Full Name" required hint="As it appears on your ID card">
+                                            <input
+                                                id="name" type="text" placeholder="e.g. John Doe"
+                                                value={name}
+                                                onChange={(e) => { setName(e.target.value); clearFieldError('name'); }}
+                                                onBlur={() => markTouched('name')}
+                                                style={{ ...baseInput, ...inputBorderStyle(errors.name, touched.name, name.length >= 3) }}
+                                            />
+                                        </Field>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.875rem', fontWeight: '600' }}>Password</label>
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required={!isRegistering} // allow required only if not clicking forgot password
-                            style={{ padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', outline: 'none' }}
-                        />
-                        {!isRegistering && (
+                                        <Field id="rollNo" label="Roll Number" required hint="e.g. BL.EN.U4CSE21001">
+                                            <input
+                                                id="rollNo" type="text" placeholder="BL.EN.U4..."
+                                                value={rollNo}
+                                                onChange={(e) => { setRollNo(e.target.value.toUpperCase()); clearFieldError('rollNo'); }}
+                                                onBlur={() => markTouched('rollNo')}
+                                                style={{ ...baseInput, ...inputBorderStyle(errors.rollNo, touched.rollNo, rollNo.length > 5) }}
+                                            />
+                                        </Field>
+
+                                        <Field id="dept" label="Department" required>
+                                            <select
+                                                id="dept" value={dept}
+                                                onChange={(e) => { setDept(e.target.value); clearFieldError('dept'); }}
+                                                onBlur={() => markTouched('dept')}
+                                                style={{ ...baseInput, ...inputBorderStyle(errors.dept, touched.dept, !!dept), backgroundColor: 'var(--surface)' }}
+                                            >
+                                                <option value="">Select Department</option>
+                                                <option value="AID">AID</option>
+                                                <option value="AIE">AIE</option>
+                                                <option value="CSE">CSE</option>
+                                                <option value="EAC">EAC</option>
+                                                <option value="ECE">ECE</option>
+                                                <option value="EEE">EEE</option>
+                                                <option value="ELC">ELC</option>
+                                                <option value="MEE">MEE</option>
+                                                <option value="RAE">RAE</option>
+                                            </select>
+                                        </Field>
+
+                                        <Field id="year" label="Year" required>
+                                            <select
+                                                id="year" value={year}
+                                                onChange={(e) => { setYear(e.target.value); clearFieldError('year'); }}
+                                                onBlur={() => markTouched('year')}
+                                                style={{ ...baseInput, ...inputBorderStyle(errors.year, touched.year, !!year), backgroundColor: 'var(--surface)' }}
+                                            >
+                                                <option value="">Select Year</option>
+                                                <option value="1st Year">1st Year</option>
+                                                <option value="2nd Year">2nd Year</option>
+                                                <option value="3rd Year">3rd Year</option>
+                                                <option value="4th Year">4th Year</option>
+                                            </select>
+                                        </Field>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* ── Email ───────────────────────────────────── */}
+                            <Field id="email" label="University Email" required hint="e.g. bl.en.u4cse21@bl.students.amrita.edu">
+                                <input
+                                    id="email" type="email"
+                                    placeholder="bl.en.u4...@bl.students.amrita.edu"
+                                    value={email}
+                                    onChange={(e) => { setEmail(e.target.value); clearFieldError('email'); }}
+                                    onBlur={() => markTouched('email')}
+                                    style={{ ...baseInput, ...inputBorderStyle(errors.email, touched.email, email.includes('@amrita')) }}
+                                />
+                            </Field>
+
+                            {/* ── Password ────────────────────────────────── */}
+                            <Field id="password" label="Password" required>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => { setPassword(e.target.value); clearFieldError('password'); }}
+                                        onBlur={() => markTouched('password')}
+                                        style={{ ...baseInput, ...inputBorderStyle(errors.password, touched.password, password.length >= 8), paddingRight: '2.75rem' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute', right: '0.75rem', top: '50%',
+                                            transform: 'translateY(-50%)', background: 'none',
+                                            border: 'none', cursor: 'pointer',
+                                            color: 'var(--text-secondary)', padding: '0.25rem'
+                                        }}
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+
+                                {/* Strength bar only on registration */}
+                                {isRegistering && <PasswordStrengthBar password={password} />}
+
+                                {/* Forgot password link on login */}
+                                {!isRegistering && (
+                                    <button type="button" onClick={handleForgotPassword}
+                                        style={{ alignSelf: 'flex-end', fontSize: '0.8rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', marginTop: '-0.1rem' }}>
+                                        Forgot Password?
+                                    </button>
+                                )}
+                            </Field>
+
+                            {/* ── Submit ──────────────────────────────────── */}
                             <button
-                                type="button"
-                                onClick={handleForgotPassword}
-                                style={{
-                                    alignSelf: 'flex-end',
-                                    fontSize: '0.8rem',
-                                    color: 'var(--primary)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    marginTop: '-0.25rem'
-                                }}
+                                type="submit" disabled={loading} className="btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem', opacity: loading ? 0.8 : 1 }}
                             >
-                                Forgot Password?
+                                {loading
+                                    ? <><div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', animation: 'spin 0.7s linear infinite' }} /> Processing…</>
+                                    : isRegistering
+                                    ? <><UserPlus size={20} /> Create Account</>
+                                    : <><LogIn size={20} /> Sign In</>}
                             </button>
-                        )}
-                    </div>
+                        </form>
 
-                    {/* Button */}
-                    <button 
-                        type="submit" 
-                        disabled={loading}
-                        className="btn-primary"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
-                    >
-                        {loading
-                            ? 'Processing...'
-                            : isRegistering
-                            ? <><UserPlus size={20} /> Register</>
-                            : <><LogIn size={20} /> Sign In</>}
-                    </button>
-                </form>
-
-                {/* Toggle */}
-                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                    {isRegistering ? 'Already have an account? ' : "Don't have an account? "}
-                    <button
-                        onClick={() => {
-                            setIsRegistering(!isRegistering);
-                        }}
-                        style={{ color: 'var(--primary)', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                    >
-                        {isRegistering ? 'Sign In' : 'Register'}
-                    </button>
-                </div>
-            </>
-        )}
+                        {/* Toggle mode */}
+                        <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                            {isRegistering ? 'Already have an account? ' : "Don't have an account? "}
+                            <button onClick={switchMode}
+                                style={{ color: 'var(--primary)', fontWeight: '700', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                {isRegistering ? 'Sign In' : 'Register'}
+                            </button>
+                        </div>
+                    </>
+                )}
             </motion.div>
         </div>
     );

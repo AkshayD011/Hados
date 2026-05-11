@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { PostSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import { FieldError, inputBorderStyle } from '../components/ui/FormField';
 
 const HomePage = () => {
     const { user } = useAuth();
@@ -20,6 +21,7 @@ const HomePage = () => {
         description: '',
         hashtags: ''
     });
+    const [postErrors, setPostErrors] = useState({});
 
     const fetchPosts = async () => {
         if (!user) return;
@@ -40,7 +42,15 @@ const HomePage = () => {
 
     const handlePostSubmit = async (e) => {
         e.preventDefault();
-        if (!postData.title || !postData.description) return;
+
+        // ── Inline validation ──────────────────────────
+        const errs = {};
+        if (!postData.title.trim()) errs.title = 'Title is required.';
+        else if (postData.title.trim().length < 5) errs.title = 'Title must be at least 5 characters.';
+        if (!postData.description.trim()) errs.description = 'Description is required.';
+        else if (postData.description.trim().length < 20) errs.description = 'Please write at least 20 characters.';
+        setPostErrors(errs);
+        if (Object.keys(errs).length > 0) return;
 
         try {
             setSubmitting(true);
@@ -169,44 +179,54 @@ const HomePage = () => {
                             Create Announcement
                         </h2>
 
-                        <form onSubmit={handlePostSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <form onSubmit={handlePostSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>Title</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                    Title <span style={{ color: 'var(--error)', fontSize: '0.8rem' }}>*</span>
+                                </label>
                                 <input 
                                     type="text" 
                                     value={postData.title}
-                                    onChange={(e) => setPostData({...postData, title: e.target.value})}
+                                    onChange={(e) => { setPostData({...postData, title: e.target.value}); setPostErrors(p => ({...p, title: null})); }}
                                     placeholder="Brief and descriptive title"
-                                    required
                                     style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
+                                        width: '100%', padding: '0.75rem',
                                         borderRadius: '0.5rem',
-                                        border: '1px solid var(--border)',
+                                        border: `1px solid ${postErrors.title ? 'var(--error)' : 'var(--border)'}`,
                                         backgroundColor: 'var(--background)',
-                                        color: 'var(--text-primary)'
+                                        color: 'var(--text-primary)',
+                                        ...inputBorderStyle(postErrors.title)
                                     }}
                                 />
+                                <FieldError error={postErrors.title} />
                             </div>
 
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>Description</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                                    Description <span style={{ color: 'var(--error)', fontSize: '0.8rem' }}>*</span>
+                                </label>
                                 <textarea 
                                     value={postData.description}
-                                    onChange={(e) => setPostData({...postData, description: e.target.value})}
-                                    placeholder="Provide detailed information..."
-                                    required
+                                    onChange={(e) => { setPostData({...postData, description: e.target.value}); setPostErrors(p => ({...p, description: null})); }}
+                                    placeholder="Provide detailed information for the campus community..."
                                     rows={5}
                                     style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
+                                        width: '100%', padding: '0.75rem',
                                         borderRadius: '0.5rem',
-                                        border: '1px solid var(--border)',
+                                        border: `1px solid ${postErrors.description ? 'var(--error)' : 'var(--border)'}`,
                                         backgroundColor: 'var(--background)',
                                         color: 'var(--text-primary)',
-                                        resize: 'vertical'
+                                        resize: 'vertical',
+                                        fontFamily: 'inherit',
+                                        ...inputBorderStyle(postErrors.description)
                                     }}
                                 />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '0.25rem' }}>
+                                    <FieldError error={postErrors.description} />
+                                    <span style={{ fontSize: '0.75rem', color: postData.description.length < 20 ? 'var(--text-tertiary)' : 'var(--success)', marginLeft: 'auto', flexShrink: 0 }}>
+                                        {postData.description.length}/20 min
+                                    </span>
+                                </div>
                             </div>
 
                             <div>

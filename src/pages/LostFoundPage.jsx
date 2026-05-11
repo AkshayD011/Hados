@@ -4,6 +4,7 @@ import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail, PackageSearch } from
 import { useAuth } from '../context/AuthContext';
 import { LostItemSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import { FieldError, inputBorderStyle } from '../components/ui/FormField';
 
 const LostFoundPage = () => {
     const { user } = useAuth();
@@ -21,6 +22,7 @@ const LostFoundPage = () => {
         location: '',
         description: ''
     });
+    const [reportErrors, setReportErrors] = useState({});
 
     const fetchItems = async () => {
         try {
@@ -44,7 +46,12 @@ const LostFoundPage = () => {
 
     const handleReportSubmit = async (e) => {
         e.preventDefault();
-        if (!reportData.title || !reportData.location) return;
+        const errs = {};
+        if (!reportData.title.trim()) errs.title = 'Item title is required.';
+        else if (reportData.title.trim().length < 3) errs.title = 'Title must be at least 3 characters.';
+        if (!reportData.location.trim()) errs.location = 'Location is required.';
+        setReportErrors(errs);
+        if (Object.keys(errs).length > 0) return;
 
         try {
             setSubmitting(true);
@@ -288,14 +295,16 @@ const LostFoundPage = () => {
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <input 
-                                type="text" 
-                                placeholder="Item Title (e.g. Lost Black Wallet)" 
-                                value={reportData.title}
-                                onChange={(e) => setReportData({...reportData, title: e.target.value})}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} 
-                            />
+                            <div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Item Title (e.g. Lost Black Wallet)*" 
+                                    value={reportData.title}
+                                    onChange={(e) => { setReportData({...reportData, title: e.target.value}); setReportErrors(p => ({...p, title: null})); }}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', ...inputBorderStyle(reportErrors.title) }} 
+                                />
+                                <FieldError error={reportErrors.title} />
+                            </div>
                             <div className="flex-col-sm" style={{ display: 'flex', gap: '1rem' }}>
                                 <select 
                                     value={reportData.status}
@@ -317,14 +326,16 @@ const LostFoundPage = () => {
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
-                            <input 
-                                type="text" 
-                                placeholder="Last seen / Found Location" 
-                                value={reportData.location}
-                                onChange={(e) => setReportData({...reportData, location: e.target.value})}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} 
-                            />
+                            <div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Last seen / Found Location*" 
+                                    value={reportData.location}
+                                    onChange={(e) => { setReportData({...reportData, location: e.target.value}); setReportErrors(p => ({...p, location: null})); }}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', ...inputBorderStyle(reportErrors.location) }} 
+                                />
+                                <FieldError error={reportErrors.location} />
+                            </div>
                             <textarea 
                                 placeholder="Description (Color, brand, identifying marks...)" 
                                 value={reportData.description}
