@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { Briefcase, Building, Calendar as CalendarIcon, DollarSign, ChevronRight } from 'lucide-react';
+import { Briefcase, Building, Calendar as CalendarIcon, DollarSign, ChevronRight, CheckCircle } from 'lucide-react';
 
 const PlacementorPage = () => {
     const [updates, setUpdates] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [appliedJobs, setAppliedJobs] = useState(new Set());
 
     useEffect(() => {
         const fetchUpdates = async () => {
@@ -20,6 +21,14 @@ const PlacementorPage = () => {
 
         fetchUpdates();
     }, []);
+
+    const handleApply = (id) => {
+        setAppliedJobs(prev => {
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+        });
+    };
 
     return (
         <div className="placementor-page animate-fade-in" style={{ paddingBottom: '2rem' }}>
@@ -46,8 +55,24 @@ const PlacementorPage = () => {
                                         <Building size={16} /> {update.role}
                                     </p>
                                 </div>
-                                <button className="btn-primary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    Apply <ChevronRight size={16} />
+                                <button 
+                                    className="btn-primary" 
+                                    onClick={() => handleApply(update.id)}
+                                    disabled={appliedJobs.has(update.id)}
+                                    style={{ 
+                                        padding: '0.5rem 1rem', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '0.25rem',
+                                        opacity: appliedJobs.has(update.id) ? 0.8 : 1,
+                                        backgroundColor: appliedJobs.has(update.id) ? 'var(--success)' : 'var(--primary)'
+                                    }}
+                                >
+                                    {appliedJobs.has(update.id) ? (
+                                        <>Applied <CheckCircle size={16} /></>
+                                    ) : (
+                                        <>Apply <ChevronRight size={16} /></>
+                                    )}
                                 </button>
                             </div>
                             

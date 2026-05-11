@@ -23,37 +23,41 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
+                let userData = null;
                 try {
                     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-                    
-                    if (firebaseUser.emailVerified) {
-                        if (userDoc.exists()) {
-                            setUser({ 
-                                uid: firebaseUser.uid, 
-                                emailVerified: true, 
-                                ...userDoc.data() 
-                            });
-                        } else {
-                            setUser({ 
-                                uid: firebaseUser.uid, 
-                                email: firebaseUser.email, 
-                                emailVerified: true 
-                            });
-                        }
-                        setIsAuthenticated(true);
-                        setVerificationPending(false);
-                    } else {
-                        // Email not verified yet
-                        setUser({ 
-                            uid: firebaseUser.uid, 
-                            email: firebaseUser.email, 
-                            emailVerified: false 
-                        });
-                        setIsAuthenticated(false);
-                        setVerificationPending(true);
+                    if (userDoc.exists()) {
+                        userData = userDoc.data();
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
+                }
+                
+                if (firebaseUser.emailVerified) {
+                    if (userData) {
+                        setUser({ 
+                            uid: firebaseUser.uid, 
+                            emailVerified: true, 
+                            ...userData 
+                        });
+                    } else {
+                        setUser({ 
+                            uid: firebaseUser.uid, 
+                            email: firebaseUser.email, 
+                            emailVerified: true 
+                        });
+                    }
+                    setIsAuthenticated(true);
+                    setVerificationPending(false);
+                } else {
+                    // Email not verified yet
+                    setUser({ 
+                        uid: firebaseUser.uid, 
+                        email: firebaseUser.email, 
+                        emailVerified: false 
+                    });
+                    setIsAuthenticated(false);
+                    setVerificationPending(true);
                 }
             } else {
                 setUser(null);
