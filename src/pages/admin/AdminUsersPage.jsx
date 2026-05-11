@@ -6,6 +6,7 @@ import { getCollection } from '../../services/firebase/firestore';
 import { ROLES, getRoleLabel, getRoleColor } from '../../utils/roles';
 import { ROUTES } from '../../constants/routes';
 import toast from 'react-hot-toast';
+import { activityLogApi, ACTION_TYPE } from '../../services/api/activityLog.api';
 
 // ─── Inline role selector ─────────────────────────────────────────────────────
 const RoleSelector = ({ userId, currentRole, onUpdate, selfUid }) => {
@@ -88,8 +89,16 @@ const AdminUsersPage = () => {
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
     const handleRoleUpdate = async (uid, newRole) => {
+        const prevUser = users.find(u => u.id === uid);
         await updateUserRole(uid, newRole);
         setUsers(prev => prev.map(u => u.id === uid ? { ...u, role: newRole } : u));
+        // Activity log (fire-and-forget)
+        activityLogApi.log(
+            { uid: currentUser?.uid, email: currentUser?.email },
+            ACTION_TYPE.ROLE_CHANGED,
+            { id: uid, type: 'user', label: prevUser?.name || prevUser?.email || uid },
+            { previousRole: prevUser?.role ?? 'student', newRole },
+        );
     };
 
     // Filtered user list

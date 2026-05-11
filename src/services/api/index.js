@@ -10,6 +10,7 @@ import { calendarApi } from './calendar.api';
 import { notificationsApi } from './notifications.api';
 import { dbAdminApi } from './dbAdmin.api';
 import { moderationApi } from './moderation.api';
+import { activityLogApi } from './activityLog.api';
 
 export const api = {
     auth: authApi,
@@ -24,4 +25,5 @@ export const api = {
     notifications: notificationsApi,
     purgeDummyData: dbAdminApi.purgeDummyData,
     moderation: moderationApi,
+    activityLog: activityLogApi,
 };

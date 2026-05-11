@@ -12,6 +12,7 @@ import {
     REPORT_ACTION,
 } from '../../services/api/moderation.api';
 import toast from 'react-hot-toast';
+import { activityLogApi, ACTION_TYPE } from '../../services/api/activityLog.api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -198,6 +199,12 @@ const AdminReportsPage = () => {
             setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: REPORT_STATUS.RESOLVED, action, resolvedAt: new Date().toISOString() } : r));
             if (selected?.id === reportId) setSelected(prev => ({ ...prev, status: REPORT_STATUS.RESOLVED, action }));
             toast.success('Report resolved.');
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.REPORT_RESOLVED,
+                { id: reportId, type: 'report', label: selected?.targetTitle ?? reportId },
+                { action },
+            );
         } catch {
             toast.error('Failed to resolve report.');
         } finally {
@@ -212,6 +219,11 @@ const AdminReportsPage = () => {
             setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: REPORT_STATUS.DISMISSED, resolvedAt: new Date().toISOString() } : r));
             if (selected?.id === reportId) setSelected(prev => ({ ...prev, status: REPORT_STATUS.DISMISSED }));
             toast.success('Report dismissed.');
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.REPORT_DISMISSED,
+                { id: reportId, type: 'report', label: selected?.targetTitle ?? reportId },
+            );
         } catch {
             toast.error('Failed to dismiss report.');
         } finally {
@@ -222,13 +234,17 @@ const AdminReportsPage = () => {
     const handleDeletePost = async (report) => {
         setResolving(true);
         try {
-            // Delete the actual post
             await deleteDocument('posts', report.targetId);
-            // Resolve the report with action: deleted
             await api.moderation.resolveReport(report.id, { action: REPORT_ACTION.DELETED, resolvedBy: user.uid });
             setReports(prev => prev.map(r => r.id === report.id ? { ...r, status: REPORT_STATUS.RESOLVED, action: REPORT_ACTION.DELETED } : r));
             if (selected?.id === report.id) setSelected(prev => ({ ...prev, status: REPORT_STATUS.RESOLVED, action: REPORT_ACTION.DELETED }));
             toast.success('Post deleted and report resolved.');
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.POST_DELETED,
+                { id: report.targetId, type: 'post', label: report.targetTitle ?? report.targetId },
+                { reportId: report.id, reason: report.reason },
+            );
         } catch (err) {
             console.error(err);
             toast.error('Failed to delete post.');

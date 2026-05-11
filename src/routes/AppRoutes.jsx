@@ -23,6 +23,7 @@ import AdminPostsPage        from '../pages/admin/AdminPostsPage';
 import AdminClubsPage        from '../pages/admin/AdminClubsPage';
 import AdminLostFoundPage    from '../pages/admin/AdminLostFoundPage';
 import AdminReportsPage      from '../pages/admin/AdminReportsPage';
+import AdminActivityPage     from '../pages/admin/AdminActivityPage';
 
 // ── Layout & guards ───────────────────────────────────────────────────────────
 import Layout     from '../components/layout/Layout';
@@ -94,6 +95,7 @@ const AppRoutes = () => {
         <Route path={ROUTES.ADMIN_CLUBS}      element={<AdminClubsPage />} />
         <Route path={ROUTES.ADMIN_LOST_FOUND} element={<AdminLostFoundPage />} />
         <Route path={ROUTES.ADMIN_REPORTS}    element={<AdminReportsPage />} />
+        <Route path={ROUTES.ADMIN_ACTIVITY}   element={<AdminActivityPage />} />
       </Route>
 
       {/* ── 404 ────────────────────────────────────────────────────── */}

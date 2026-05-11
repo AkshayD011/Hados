@@ -3,6 +3,7 @@ import { Users2, CheckCircle, XCircle, Clock, RefreshCcw, Eye, AlertCircle, Tras
 import { useAuth } from '../../context/AuthContext';
 import { clubsApi, CLUB_STATUS } from '../../services/api/clubs.api';
 import toast from 'react-hot-toast';
+import { activityLogApi, ACTION_TYPE } from '../../services/api/activityLog.api';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -139,6 +140,12 @@ const AdminClubsPage = () => {
             setClubs(prev => prev.map(c => c.id === clubId ? { ...c, status: CLUB_STATUS.APPROVED, reviewedAt: new Date().toISOString() } : c));
             if (selected?.id === clubId) setSelected(p => ({ ...p, status: CLUB_STATUS.APPROVED }));
             toast.success('Club approved and now publicly visible.');
+            const club = clubs.find(c => c.id === clubId);
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.CLUB_APPROVED,
+                { id: clubId, type: 'club', label: club?.name ?? clubId },
+            );
         } catch { toast.error('Failed to approve club.'); }
         finally { setActing(false); }
     };
@@ -150,6 +157,13 @@ const AdminClubsPage = () => {
             setClubs(prev => prev.map(c => c.id === clubId ? { ...c, status: CLUB_STATUS.REJECTED, rejectionNote: note } : c));
             if (selected?.id === clubId) setSelected(p => ({ ...p, status: CLUB_STATUS.REJECTED, rejectionNote: note }));
             toast.success('Club rejected.');
+            const club = clubs.find(c => c.id === clubId);
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.CLUB_REJECTED,
+                { id: clubId, type: 'club', label: club?.name ?? clubId },
+                { rejectionNote: note || null },
+            );
         } catch { toast.error('Failed to reject club.'); }
         finally { setActing(false); }
     };
@@ -158,10 +172,16 @@ const AdminClubsPage = () => {
         if (!window.confirm('Permanently delete this club? This cannot be undone.')) return;
         setActing(true);
         try {
+            const club = clubs.find(c => c.id === clubId);
             await clubsApi.deleteClub(clubId);
             setClubs(prev => prev.filter(c => c.id !== clubId));
             setSelected(null);
             toast.success('Club deleted.');
+            activityLogApi.log(
+                { uid: user.uid, email: user.email },
+                ACTION_TYPE.CLUB_DELETED,
+                { id: clubId, type: 'club', label: club?.name ?? clubId },
+            );
         } catch { toast.error('Failed to delete club.'); }
         finally { setActing(false); }
     };

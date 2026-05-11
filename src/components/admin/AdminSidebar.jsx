@@ -17,6 +17,7 @@ import {
     Users2,
     PackageSearch,
     Flag,
+    Activity,
     X,
     ShieldCheck,
     ChevronRight,
@@ -49,6 +50,7 @@ const NAV_GROUPS = [
         label: 'Moderation',
         items: [
             { name: 'Reports',     icon: Flag,            path: ROUTES.ADMIN_REPORTS },
+            { name: 'Activity Log', icon: Activity,        path: ROUTES.ADMIN_ACTIVITY },
         ],
     },
 ];
