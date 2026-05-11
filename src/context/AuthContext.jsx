@@ -11,6 +11,8 @@ import {
 } from '../services/firebase/auth';
 import { getDocument, createDocument, updateDocument } from '../services/firebase/firestore';
 import { DEFAULT_ROLE, isAdmin, isModerator, isFaculty, hasMinRole, hasRole, isValidRole, ROLES } from '../utils/roles';
+import { requestNotificationPermission, onForegroundMessage } from '../services/firebase/messaging';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -78,6 +80,28 @@ export const AuthProvider = ({ children }) => {
 
         return () => unsubscribe();
     }, []);
+
+    // ─── Foreground Notification Listener ──────────────────────────────────────
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            const unsubscribe = onForegroundMessage((payload) => {
+                // Show a nice toast for foreground notifications
+                toast(
+                    () => (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ fontSize: '20px' }}>📢</div>
+                            <div>
+                                <div style={{ fontWeight: 'bold' }}>{payload.notification.title}</div>
+                                <div style={{ fontSize: '12px', opacity: 0.8 }}>{payload.notification.body}</div>
+                            </div>
+                        </div>
+                    ),
+                    { duration: 5000, position: 'top-right' }
+                );
+            });
+            return () => unsubscribe();
+        }
+    }, [isAuthenticated, user]);
 
     // ─── Register ─────────────────────────────────────────────────────────────
     const register = async (email, password, rollNo, name, dept, year) => {
@@ -240,6 +264,12 @@ export const AuthProvider = ({ children }) => {
         updateUserRole,
         updateUserField,
         ROLES,
+
+        // Notifications
+        requestNotifications: () => {
+            if (user) return requestNotificationPermission(user.uid);
+            return Promise.reject('User not logged in');
+        },
 
         // Convenience role checks (mirrors useRole hook for simple consumers)
         ...roleChecks,

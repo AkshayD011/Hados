@@ -1,3 +1,5 @@
+
+
 # Hados Admin Access & Role Management
 
 This document explains how to manage user roles and administrative access within the Hados application.

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PostCard from '../components/common/PostCard';
 import TrendingWidget from '../components/common/TrendingWidget';
 import { api } from '../services/api';
-import { FileText, Plus, X, Image as ImageIcon } from 'lucide-react';
+import { FileText, Plus, X, Image as ImageIcon, Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -11,7 +11,8 @@ import EmptyState from '../components/common/EmptyState';
 import { FieldError, inputBorderStyle } from '../components/ui/FormField';
 
 const HomePage = () => {
-    const { user } = useAuth();
+    const { user, requestNotifications } = useAuth();
+    const [notifLoading, setNotifLoading] = useState(false);
     const location = useLocation();
 
     // One-shot toast when redirected from a protected admin route
@@ -88,7 +89,20 @@ const HomePage = () => {
             setSubmitting(false);
         }
     };
-
+    const handleEnableNotifications = async () => {
+        try {
+            setNotifLoading(true);
+            const token = await requestNotifications();
+            if (token) {
+                toast.success('Official notifications enabled!', { icon: '🔔' });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to enable notifications. Please check browser settings.');
+        } finally {
+            setNotifLoading(false);
+        }
+    };
     return (
         <div className="flex-col-lg" style={{ display: 'flex', gap: '2rem', width: '100%', alignItems: 'flex-start' }}>
             <div className="home-page animate-fade-in w-full-lg" style={{ flex: '0 0 68.75%', minWidth: 0 }}>
@@ -119,6 +133,51 @@ const HomePage = () => {
                         <span className="hide-sm">Create Post</span>
                     </button>
                 </div>
+
+                {/* Notification Prompt Banner */}
+                {user && !user.notificationsEnabled && Notification.permission !== 'granted' && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="glass" 
+                        style={{ 
+                            padding: '1.25rem', 
+                            borderRadius: '1rem', 
+                            marginBottom: '1.5rem', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '1.25rem',
+                            border: '1px solid var(--primary-alpha-15)',
+                            backgroundColor: 'var(--primary-alpha-5)',
+                            flexWrap: 'wrap'
+                        }}
+                    >
+                        <div style={{ 
+                            width: '44px', height: '44px', borderRadius: '10px', 
+                            backgroundColor: 'var(--primary)', color: 'white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0
+                        }}>
+                            <Bell size={22} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.125rem' }}>Don't miss official updates</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Enable push notifications to get urgent campus alerts and news instantly.</p>
+                        </div>
+                        <button 
+                            onClick={handleEnableNotifications}
+                            disabled={notifLoading}
+                            style={{ 
+                                padding: '0.625rem 1.25rem', borderRadius: '0.75rem', 
+                                backgroundColor: 'var(--primary)', color: 'white', 
+                                border: 'none', fontWeight: '600', fontSize: '0.875rem',
+                                cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                        >
+                            {notifLoading ? 'Enabling...' : 'Enable Notifications'}
+                        </button>
+                    </motion.div>
+                )}
 
                 <div className="feed" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {loading ? (
