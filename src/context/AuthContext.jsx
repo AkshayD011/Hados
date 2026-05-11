@@ -9,7 +9,8 @@ import {
     reloadUser,
     getCurrentUser
 } from '../services/firebase/auth';
-import { getDocument, createDocument } from '../services/firebase/firestore';
+import { getDocument, createDocument, updateDocument } from '../services/firebase/firestore';
+import { DEFAULT_ROLE, isAdmin, isModerator, isFaculty, hasMinRole, hasRole, isValidRole, ROLES } from '../utils/roles';
 
 const AuthContext = createContext();
 
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
     const [verificationPending, setVerificationPending] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // ─── Auth state listener ──────────────────────────────────────────────────
     useEffect(() => {
         const unsubscribe = onAuthChange(async (firebaseUser) => {
             if (firebaseUser) {
@@ -31,31 +33,37 @@ export const AuthProvider = ({ children }) => {
                         userData = userDoc;
                     }
                 } catch (error) {
-                    console.error("Error fetching user data:", error);
+                    console.error('Error fetching user data:', error);
                 }
-                
-                if (firebaseUser.emailVerified) {
-                    if (userData) {
-                        setUser({ 
-                            uid: firebaseUser.uid, 
-                            emailVerified: true, 
-                            ...userData 
-                        });
-                    } else {
-                        setUser({ 
-                            uid: firebaseUser.uid, 
-                            email: firebaseUser.email, 
-                            emailVerified: true 
-                        });
+
+                // Backfill: if the user document has no role field, add the default
+                if (userData && !userData.role) {
+                    try {
+                        await updateDocument('users', firebaseUser.uid, { role: DEFAULT_ROLE });
+                        userData.role = DEFAULT_ROLE;
+                    } catch (err) {
+                        console.warn('Could not backfill user role:', err);
                     }
+                }
+
+                if (firebaseUser.emailVerified) {
+                    const resolvedUser = {
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        emailVerified: true,
+                        role: DEFAULT_ROLE,    // safe fallback
+                        ...(userData || {}),
+                    };
+
+                    setUser(resolvedUser);
                     setIsAuthenticated(true);
                     setVerificationPending(false);
                 } else {
-                    // Email not verified yet
-                    setUser({ 
-                        uid: firebaseUser.uid, 
-                        email: firebaseUser.email, 
-                        emailVerified: false 
+                    setUser({
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        emailVerified: false,
+                        role: DEFAULT_ROLE,
                     });
                     setIsAuthenticated(false);
                     setVerificationPending(true);
@@ -71,9 +79,12 @@ export const AuthProvider = ({ children }) => {
         return () => unsubscribe();
     }, []);
 
+    // ─── Register ─────────────────────────────────────────────────────────────
     const register = async (email, password, rollNo, name, dept, year) => {
         if (!email.endsWith('@bl.students.amrita.edu')) {
-            throw new Error('Only university emails (@bl.students.amrita.edu) are allowed. Please use your official university email to register.');
+            throw new Error(
+                'Only university emails (@bl.students.amrita.edu) are allowed.'
+            );
         }
 
         // eslint-disable-next-line no-useless-catch
@@ -81,7 +92,6 @@ export const AuthProvider = ({ children }) => {
             const userCredential = await firebaseRegister(email, password);
             const newUser = userCredential.user;
 
-            // Send verification email
             await sendVerification(newUser);
 
             const userData = {
@@ -93,10 +103,10 @@ export const AuthProvider = ({ children }) => {
                 bio: '',
                 avatar: null,
                 isIdVerified: false,
-                createdAt: new Date().toISOString()
+                role: DEFAULT_ROLE,          // ← always "student" on signup
+                createdAt: new Date().toISOString(),
             };
 
-            // Store extra user metadata in Firestore
             await createDocument('users', userData, newUser.uid);
 
             return { user: newUser, ...userData };
@@ -105,6 +115,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ─── Login ────────────────────────────────────────────────────────────────
     const login = async (email, password) => {
         // eslint-disable-next-line no-useless-catch
         try {
@@ -115,14 +126,16 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ─── Logout ───────────────────────────────────────────────────────────────
     const logout = async () => {
         try {
             await firebaseLogout();
         } catch (error) {
-            console.error("Error signing out:", error);
+            console.error('Error signing out:', error);
         }
     };
 
+    // ─── Email verification helpers ───────────────────────────────────────────
     const resendVerification = async () => {
         const currentUser = getCurrentUser();
         if (currentUser) {
@@ -134,10 +147,11 @@ export const AuthProvider = ({ children }) => {
         const updatedUser = await reloadUser();
         if (updatedUser && updatedUser.emailVerified) {
             setVerificationPending(false);
-            // The onAuthChange listener will handle the rest
+            // onAuthChange listener will re-run and update the user state
         }
     };
 
+    // ─── Password reset ───────────────────────────────────────────────────────
     const resetPassword = async (email) => {
         // eslint-disable-next-line no-useless-catch
         try {
@@ -147,18 +161,77 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ─── Role management ─────────────────────────────────────────────────────
+    /**
+     * Update the role of any user document in Firestore.
+     * Only admins should call this — enforce that in your UI with RoleGuard.
+     *
+     * @param {string} targetUid — UID of the user to update
+     * @param {string} newRole   — must be a value from ROLES
+     */
+    const updateUserRole = async (targetUid, newRole) => {
+        if (!isValidRole(newRole)) {
+            throw new Error(`Invalid role "${newRole}". Valid roles are: ${Object.values(ROLES).join(', ')}.`);
+        }
+        await updateDocument('users', targetUid, { role: newRole });
+
+        // If updating the currently logged-in user, reflect it immediately
+        if (user && user.uid === targetUid) {
+            setUser(prev => ({ ...prev, role: newRole }));
+        }
+    };
+
+    // ─── Convenience role checks (derived from current user) ─────────────────
+    const roleChecks = {
+        /** True if the current user has the admin role. */
+        isAdmin: isAdmin(user),
+
+        /** True if the current user has at least moderator privileges. */
+        isModerator: isModerator(user),
+
+        /** True if the current user has at least faculty privileges. */
+        isFaculty: isFaculty(user),
+
+        /**
+         * Check if the current user has at least `minRole` privilege.
+         * @param {string} minRole
+         */
+        hasMinRole: (minRole) => hasMinRole(user?.role, minRole),
+
+        /**
+         * Check if the current user has exactly `requiredRole`.
+         * @param {string} requiredRole
+         */
+        hasRole: (requiredRole) => hasRole(user?.role, requiredRole),
+    };
+
+    // ─── Context value ────────────────────────────────────────────────────────
     const value = {
+        // State
         user,
         isAuthenticated,
         verificationPending,
         loading,
+
+        // Auth actions
         register,
         login,
         logout,
         resendVerification,
         checkVerification,
-        resetPassword
+        resetPassword,
+
+        // Role management
+        updateUserRole,
+        ROLES,
+
+        // Convenience role checks (mirrors useRole hook for simple consumers)
+        ...roleChecks,
     };
 
-    return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {!loading && children}
+        </AuthContext.Provider>
+    );
 };
