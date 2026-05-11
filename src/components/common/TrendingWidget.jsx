@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { TrendingUp } from 'lucide-react';
+import { TrendingWidgetSkeleton } from '../ui/Skeleton';
 
 const TrendingWidget = () => {
     const [hashtags, setHashtags] = useState([]);
@@ -29,7 +30,7 @@ const TrendingWidget = () => {
             </div>
             
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '1rem' }}>Loading...</div>
+                <TrendingWidgetSkeleton />
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {hashtags.map((item, index) => (

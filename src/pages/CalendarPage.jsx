@@ -67,7 +67,7 @@ const CalendarPage = () => {
             </div>
 
             {loading ? (
-                <div>
+                <div className="glass card-base" style={{ padding: '0.5rem' }}>
                     {[1, 2, 3, 4].map((i) => <CalendarSkeleton key={i} />)}
                 </div>
             ) : filtered.length === 0 ? (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Search, MapPin, Navigation, Clock } from 'lucide-react';
-import { MapSkeleton } from '../components/ui/Skeleton';
+import { MapLoadingOverlay } from '../components/ui/Skeleton';
 
 const MapPage = () => {
     const [pois, setPois] = useState([]);
@@ -68,7 +68,7 @@ const MapPage = () => {
                 justifyContent: 'center'
             }}>
                 {loading ? (
-                    <MapSkeleton />
+                    <MapLoadingOverlay />
                 ) : (
                     <>
                         {filteredPois.map(poi => (

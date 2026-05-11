@@ -176,6 +176,20 @@ a {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes brandPulse {
+  0%, 100% { transform: scale(1);   box-shadow: 0 8px 32px rgba(155, 34, 66, 0.35); }
+  50%       { transform: scale(1.07); box-shadow: 0 12px 40px rgba(155, 34, 66, 0.55); }
+}
+
 /* Input Focus States */
 input:focus {
   border-color: var(--primary) !important;

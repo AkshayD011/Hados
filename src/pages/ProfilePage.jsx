@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { User, Mail, Hash, BookOpen, Upload, CheckCircle, Save, Edit2, X, Camera } from 'lucide-react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
+import { UploadingIndicator } from '../components/ui/Skeleton';
 
 const ProfilePage = () => {
     const { user } = useAuth();
@@ -376,7 +377,7 @@ const ProfilePage = () => {
                     }}
                 >
                     {isUploading ? (
-                        <p>Uploading ID Card...</p>
+                        <UploadingIndicator label="Uploading ID Card…" />
                     ) : isVerified ? (
                         <div style={{ color: 'var(--success)' }}>
                             <CheckCircle size={40} style={{ margin: '0 auto 0.5rem' }} />
