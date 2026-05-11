@@ -19,7 +19,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AppLoadingSkeleton } from '../ui/Skeleton';
-import Layout from '../layout/Layout';
+import AdminLayout from '../admin/AdminLayout';
 import { ROUTES } from '../../constants/routes';
 import { ROLES } from '../../utils/roles';
 
@@ -56,9 +56,9 @@ const AdminRoute = () => {
 
     // ── 4. Authenticated admin ───────────────────────────────────────────────
     return (
-        <Layout>
+        <AdminLayout>
             <Outlet />
-        </Layout>
+        </AdminLayout>
     );
 };
 

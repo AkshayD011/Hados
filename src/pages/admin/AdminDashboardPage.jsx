@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Users, ShieldCheck, FileText, AlertCircle, RefreshCcw, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { getCollection } from '../services/firebase/firestore';
-import { getRoleLabel, getRoleColor, ROLES } from '../utils/roles';
-import { ROUTES } from '../constants/routes';
+import { useAuth } from '../../context/AuthContext';
+import { getCollection } from '../../services/firebase/firestore';
+import { getRoleLabel, getRoleColor, ROLES } from '../../utils/roles';
+import { ROUTES } from '../../constants/routes';
 
 const StatCard = ({ icon, label, value, color, loading }) => {
     const Comp = icon;

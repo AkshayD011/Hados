@@ -13,4 +13,8 @@ export const ROUTES = {
   ADMIN:              '/admin',
   ADMIN_DASHBOARD:    '/admin/dashboard',
   ADMIN_USERS:        '/admin/users',
+  ADMIN_POSTS:        '/admin/posts',
+  ADMIN_CLUBS:        '/admin/clubs',
+  ADMIN_LOST_FOUND:   '/admin/lost-found',
+  ADMIN_REPORTS:      '/admin/reports',
 };
