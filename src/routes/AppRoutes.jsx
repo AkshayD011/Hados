@@ -14,6 +14,7 @@ import ClubsPage from '../pages/ClubsPage';
 import PlacementorPage from '../pages/PlacementorPage';
 import CalendarPage from '../pages/CalendarPage';
 import SavedPostsPage from '../pages/SavedPostsPage';
+import NotFoundPage from '../pages/NotFoundPage';
 
 // Protected Layout Component (Handles auth and layout wrapper)
 const ProtectedLayout = () => {
@@ -46,8 +47,8 @@ const AppRoutes = () => {
         <Route path={ROUTES.SAVED} element={<SavedPostsPage />} />
       </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to={ROUTES.HOME} />} />
+      {/* 404 — catch-all for unknown routes */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
