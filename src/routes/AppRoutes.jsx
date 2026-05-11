@@ -14,6 +14,7 @@ import ClubsPage             from '../pages/ClubsPage';
 import PlacementorPage       from '../pages/PlacementorPage';
 import CalendarPage          from '../pages/CalendarPage';
 import SavedPostsPage        from '../pages/SavedPostsPage';
+import AdminSetupPage       from '../pages/AdminSetupPage';
 import NotFoundPage          from '../pages/NotFoundPage';
 
 // ── Admin page imports ────────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ const AppRoutes = () => {
         <Route path={ROUTES.PLACEMENTOR} element={<PlacementorPage />} />
         <Route path={ROUTES.CALENDAR}    element={<CalendarPage />} />
         <Route path={ROUTES.SAVED}       element={<SavedPostsPage />} />
+        <Route path={ROUTES.ADMIN_SETUP} element={<AdminSetupPage />} />
       </Route>
 
       {/* ── Admin only (authenticated + role === "admin") ───────────── */}
