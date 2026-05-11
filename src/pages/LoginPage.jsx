@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, GraduationCap, AlertCircle, Mail, RefreshCcw, LogOut, CheckCircle } from 'lucide-react';
+import { LogIn, UserPlus, GraduationCap, Mail, RefreshCcw, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
     const [isRegistering, setIsRegistering] = useState(false);
@@ -15,8 +16,6 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
     const { login, register, logout, resendVerification, checkVerification, isAuthenticated, verificationPending, user, resetPassword } = useAuth();
@@ -31,17 +30,16 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccessMessage('');
         setLoading(true);
 
         try {
             if (isRegistering) {
                 await register(email, password, rollNo, name, dept, year);
-                setSuccessMessage('Registration successful! Please check your university email for verification.');
+                toast.success('Registration successful! Please check your university email.');
                 setIsRegistering(false);
             } else {
                 await login(email, password);
+                toast.success('Signed in successfully!');
             }
         } catch (err) {
             let errorMsg = err.message || "Something went wrong";
@@ -58,7 +56,7 @@ const LoginPage = () => {
             } else if (errorMsg.includes('auth/network-request-failed')) {
                 errorMsg = "Network error. Please check your internet connection.";
             }
-            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -66,16 +64,15 @@ const LoginPage = () => {
 
     const handleForgotPassword = async () => {
         if (!email) {
-            setError("Please enter your university email first to reset your password.");
+            toast.error("Please enter your university email first to reset your password.");
             return;
         }
         try {
             setLoading(true);
-            setError('');
             await resetPassword(email);
-            setSuccessMessage("A password reset link has been sent to your email.");
+            toast.success("A password reset link has been sent to your email.");
         } catch (err) {
-            setError(err.message || "Failed to send reset email.");
+            toast.error(err.message || "Failed to send reset email.");
         } finally {
             setLoading(false);
         }
@@ -187,7 +184,7 @@ const LoginPage = () => {
                                 <button 
                                     onClick={async () => {
                                         await resendVerification();
-                                        setSuccessMessage('Verification email resent!');
+                                        toast.success('Verification email resent!');
                                     }}
                                     style={{ 
                                         flex: 1,
@@ -247,33 +244,10 @@ const LoginPage = () => {
                                 </button>
                             </p>
                         </div>
-
-                        {successMessage && (
-                            <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                                <CheckCircle size={14} /> {successMessage}
-                            </p>
-                        )}
                     </motion.div>
                 ) : (
                     <>
-                        {/* Success Message */}
-                {successMessage && (
-                    <div
-                        style={{
-                            padding: '1rem',
-                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                            color: 'green',
-                            borderRadius: '0.5rem',
-                            marginBottom: '1.5rem',
-                            fontSize: '0.875rem',
-                            textAlign: 'center'
-                        }}
-                    >
-                        {successMessage}
-                    </div>
-                )}
-
-                <form
+                        <form
                     onSubmit={handleSubmit}
                     style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
                 >
@@ -284,6 +258,7 @@ const LoginPage = () => {
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
+                                className="grid-1-col-md"
                                 style={{
                                     display: 'grid',
                                     gridTemplateColumns: '1fr 1fr',
@@ -394,14 +369,6 @@ const LoginPage = () => {
                         )}
                     </div>
 
-                    {/* Error */}
-                    {error && (
-                        <div style={{ color: 'red', display: 'flex', gap: '0.5rem' }}>
-                            <AlertCircle size={16} />
-                            {error}
-                        </div>
-                    )}
-
                     {/* Button */}
                     <button 
                         type="submit" 
@@ -423,8 +390,6 @@ const LoginPage = () => {
                     <button
                         onClick={() => {
                             setIsRegistering(!isRegistering);
-                            setError('');
-                            setSuccessMessage('');
                         }}
                         style={{ color: 'var(--primary)', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     >

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Sun, Moon, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const Header = ({ onMenuClick }) => {
     const { user } = useAuth();
@@ -22,7 +22,7 @@ const Header = ({ onMenuClick }) => {
     const unreadCount = notifications.filter(n => n.unread).length;
 
     return (
-        <header className="glass" style={{
+        <header className="glass p-sm" style={{
             position: 'sticky',
             top: 0,
             zIndex: 100,
@@ -39,7 +39,7 @@ const Header = ({ onMenuClick }) => {
                 >
                     <Menu size={24} />
                 </button>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em', margin: 0 }}>Hados</h1>
+                <h1 className="text-md-mobile" style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em', margin: 0 }}>Hados</h1>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>

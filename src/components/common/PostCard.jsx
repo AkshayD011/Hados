@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Bookmark, Share2, MoreHorizontal, Image as ImageIcon } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { api } from '../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
+import toast from 'react-hot-toast';
 
 const PostCard = ({ post }) => {
     const [isBookmarked, setIsBookmarked] = useState(post.bookmarked || false);
@@ -13,13 +14,22 @@ const PostCard = ({ post }) => {
     }, [post.bookmarked]);
 
     const handleBookmark = async () => {
-        if (!user) return;
+        if (!user) {
+            toast.error('You must be logged in to save posts.');
+            return;
+        }
         const newStatus = !isBookmarked;
         setIsBookmarked(newStatus); // Optimistic UI update
         try {
             await api.feed.toggleBookmark(user.uid, post.id, newStatus);
+            if (newStatus) {
+                toast.success('Post saved to bookmarks!');
+            } else {
+                toast.success('Post removed from bookmarks!');
+            }
         } catch (e) {
             console.error("Failed to toggle bookmark", e);
+            toast.error('Failed to save post. Please try again.');
             setIsBookmarked(!newStatus); // Revert on failure
         }
     };

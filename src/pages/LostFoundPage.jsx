@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../services/api';
 import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { LostItemSkeleton } from '../components/ui/Skeleton';
 
 const LostFoundPage = () => {
     const { user } = useAuth();
@@ -170,7 +171,9 @@ const LostFoundPage = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Loading items...</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {[1, 2, 3].map((i) => <LostItemSkeleton key={i} />)}
+                </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {filteredItems.length === 0 ? (
@@ -278,7 +281,7 @@ const LostFoundPage = () => {
                                 required
                                 style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} 
                             />
-                            <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div className="flex-col-sm" style={{ display: 'flex', gap: '1rem' }}>
                                 <select 
                                     value={reportData.status}
                                     onChange={(e) => setReportData({...reportData, status: e.target.value})}

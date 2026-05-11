@@ -1,111 +1,36 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
-import HomePage from './pages/HomePage';
-import ProfilePage from './pages/ProfilePage';
-import Layout from './components/Layout';
-
-import MapPage from './pages/MapPage';
-import LostFoundPage from './pages/LostFoundPage';
-import ClubsPage from './pages/ClubsPage';
-import PlacementorPage from './pages/PlacementorPage';
-import CalendarPage from './pages/CalendarPage';
-import SavedPostsPage from './pages/SavedPostsPage';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import InteractiveBackground from './components/InteractiveBackground';
-
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  
-  if (loading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  
-  return children;
-};
+import InteractiveBackground from './components/ui/InteractiveBackground';
+import AppRoutes from './routes/AppRoutes';
+import { Toaster } from 'react-hot-toast';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 function App() {
   return (
-    <Router>
-      <ThemeProvider>
-        <InteractiveBackground />
-        <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout>
-                <HomePage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Layout>
-                <ProfilePage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/map" element={
-            <ProtectedRoute>
-              <Layout>
-                <MapPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/lost-found" element={
-            <ProtectedRoute>
-              <Layout>
-                <LostFoundPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/clubs" element={
-            <ProtectedRoute>
-              <Layout>
-                <ClubsPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-
-
-          <Route path="/placementor" element={
-            <ProtectedRoute>
-              <Layout>
-                <PlacementorPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/calendar" element={
-            <ProtectedRoute>
-              <Layout>
-                <CalendarPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/saved" element={
-            <ProtectedRoute>
-              <Layout>
-                <SavedPostsPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AuthProvider>
-      </ThemeProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <ThemeProvider>
+          <InteractiveBackground />
+          <AuthProvider>
+            <Toaster 
+              position="top-center" 
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: 'var(--card-bg, #ffffff)',
+                  color: 'var(--text-primary, #000000)',
+                  border: '1px solid var(--border, #e5e7eb)',
+                  borderRadius: '0.75rem',
+                },
+              }} 
+            />
+            <AppRoutes />
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

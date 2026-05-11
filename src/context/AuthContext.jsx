@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
 import { 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut,
-    sendEmailVerification,
-    sendPasswordResetEmail
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+    onAuthChange, 
+    loginUser as firebaseLogin, 
+    registerUser as firebaseRegister, 
+    logoutUser as firebaseLogout,
+    sendVerification,
+    resetPassword as firebaseReset,
+    reloadUser,
+    getCurrentUser
+} from '../services/firebase/auth';
+import { getDocument, createDocument } from '../services/firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -21,13 +22,13 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribe = onAuthChange(async (firebaseUser) => {
             if (firebaseUser) {
                 let userData = null;
                 try {
-                    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-                    if (userDoc.exists()) {
-                        userData = userDoc.data();
+                    const userDoc = await getDocument('users', firebaseUser.uid);
+                    if (userDoc._exists) {
+                        userData = userDoc;
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
@@ -77,11 +78,11 @@ export const AuthProvider = ({ children }) => {
 
         // eslint-disable-next-line no-useless-catch
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await firebaseRegister(email, password);
             const newUser = userCredential.user;
 
             // Send verification email
-            await sendEmailVerification(newUser);
+            await sendVerification(newUser);
 
             const userData = {
                 email,
@@ -96,7 +97,7 @@ export const AuthProvider = ({ children }) => {
             };
 
             // Store extra user metadata in Firestore
-            await setDoc(doc(db, 'users', newUser.uid), userData);
+            await createDocument('users', userData, newUser.uid);
 
             return { user: newUser, ...userData };
         } catch (error) {
@@ -107,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         // eslint-disable-next-line no-useless-catch
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await firebaseLogin(email, password);
             return userCredential.user;
         } catch (error) {
             throw error;
@@ -116,34 +117,31 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await signOut(auth);
+            await firebaseLogout();
         } catch (error) {
             console.error("Error signing out:", error);
         }
     };
 
     const resendVerification = async () => {
-        if (auth.currentUser) {
-            await sendEmailVerification(auth.currentUser);
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            await sendVerification(currentUser);
         }
     };
 
     const checkVerification = async () => {
-        if (auth.currentUser) {
-            await auth.currentUser.reload();
-            // Manually trigger the current state changed logic
-            const updatedUser = auth.currentUser;
-            if (updatedUser.emailVerified) {
-                setVerificationPending(false);
-                // The onAuthStateChanged listener will handle the rest on the next cycle/reload
-            }
+        const updatedUser = await reloadUser();
+        if (updatedUser && updatedUser.emailVerified) {
+            setVerificationPending(false);
+            // The onAuthChange listener will handle the rest
         }
     };
 
     const resetPassword = async (email) => {
         // eslint-disable-next-line no-useless-catch
         try {
-            await sendPasswordResetEmail(auth, email);
+            await firebaseReset(email);
         } catch (error) {
             throw error;
         }

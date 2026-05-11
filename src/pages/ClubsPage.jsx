@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../services/api';
 import { Users, ChevronRight, Activity } from 'lucide-react';
+import { ClubSkeleton } from '../components/ui/Skeleton';
 
 const ClubsPage = () => {
     const [clubs, setClubs] = useState([]);
@@ -41,9 +42,11 @@ const ClubsPage = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Loading clubs...</div>
+                <div className="grid-1-col-md" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    {[1, 2, 3, 4, 5, 6].map((i) => <ClubSkeleton key={i} />)}
+                </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div className="grid-1-col-md" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {clubs.map(club => (
                         <div key={club.id} className="glass card-base animate-fade-in" style={{ padding: '1.5rem', transition: 'transform 0.2s', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>

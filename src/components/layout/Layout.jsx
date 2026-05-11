@@ -11,7 +11,7 @@ const Layout = ({ children }) => {
             <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <main style={{ padding: '2rem', width: '100%' }}>
+                    <main className="p-md" style={{ padding: '2rem', width: '100%' }}>
                         {children}
                     </main>
                 </div>

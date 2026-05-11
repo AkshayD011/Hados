@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import PostCard from '../components/PostCard';
-import TrendingWidget from '../components/TrendingWidget';
-import { api } from '../utils/api';
+import PostCard from '../components/common/PostCard';
+import TrendingWidget from '../components/common/TrendingWidget';
+import { api } from '../services/api';
 import { FileText, Plus, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
+import { PostSkeleton } from '../components/ui/Skeleton';
 
 const HomePage = () => {
     const { user } = useAuth();
@@ -56,21 +58,23 @@ const HomePage = () => {
             setPostData({ title: '', description: '', hashtags: '' });
             setImageFile(null);
             fetchPosts(); // Refresh feed
-            window.location.reload(); // Quick way to force TrendingWidget to refresh
+            toast.success('Announcement published successfully!');
+            setTimeout(() => window.location.reload(), 1000); // Quick way to force TrendingWidget to refresh
         } catch (error) {
             console.error("Failed to create post", error);
+            toast.error("Failed to publish announcement. Please try again.");
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div style={{ display: 'flex', gap: '2rem', width: '100%', alignItems: 'flex-start' }}>
-            <div className="home-page animate-fade-in" style={{ flex: '0 0 68.75%', minWidth: 0 }}>
+        <div className="flex-col-lg" style={{ display: 'flex', gap: '2rem', width: '100%', alignItems: 'flex-start' }}>
+            <div className="home-page animate-fade-in w-full-lg" style={{ flex: '0 0 68.75%', minWidth: 0 }}>
                 <div style={{ marginBottom: '2.5rem', marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>Welcome to Mailer Daemon</h2>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Official campus announcements and essential updates</p>
+                        <h2 className="text-md-mobile" style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>Welcome to Mailer Daemon</h2>
+                        <p className="text-sm-mobile" style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Official campus announcements and essential updates</p>
                     </div>
                     <button 
                         onClick={() => setShowCreateModal(true)}
@@ -90,27 +94,14 @@ const HomePage = () => {
                         }}
                     >
                         <Plus size={20} />
-                        <span>Create Post</span>
+                        <span className="hide-sm">Create Post</span>
                     </button>
                 </div>
 
                 <div className="feed" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {loading ? (
-                        // Skeleton Loading State
                         [1, 2, 3].map((i) => (
-                            <div key={i} className="card-base glass" style={{ padding: '1.25rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                                    <div className="animate-pulse" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--border)' }} />
-                                    <div style={{ flex: 1 }}>
-                                        <div className="animate-pulse" style={{ height: '14px', width: '120px', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '0.5rem' }} />
-                                        <div className="animate-pulse" style={{ height: '10px', width: '80px', backgroundColor: 'var(--border)', borderRadius: '4px' }} />
-                                    </div>
-                                </div>
-                                <div className="animate-pulse" style={{ height: '24px', width: '80%', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '0.75rem' }} />
-                                <div className="animate-pulse" style={{ height: '16px', width: '100%', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '0.5rem' }} />
-                                <div className="animate-pulse" style={{ height: '16px', width: '60%', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '1rem' }} />
-                                <div className="animate-pulse" style={{ height: '200px', width: '100%', backgroundColor: 'var(--border)', borderRadius: '0.75rem' }} />
-                            </div>
+                            <PostSkeleton key={i} />
                         ))
                     ) : posts.length > 0 ? (
                         posts.map(post => (
@@ -126,7 +117,7 @@ const HomePage = () => {
                 </div>
             </div>
 
-            <div style={{ flex: '0 0 31.25%', minWidth: 0 }}>
+            <div className="w-full-lg" style={{ flex: '0 0 31.25%', minWidth: 0 }}>
                 <TrendingWidget />
             </div>
 

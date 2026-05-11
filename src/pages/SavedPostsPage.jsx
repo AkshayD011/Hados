@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
-import PostCard from '../components/PostCard';
+import { api } from '../services/api';
+import PostCard from '../components/common/PostCard';
 import { Bookmark } from 'lucide-react';
+import { PostSkeleton } from '../components/ui/Skeleton';
 
 const SavedPostsPage = () => {
     const [savedPosts, setSavedPosts] = useState([]);
@@ -36,7 +37,9 @@ const SavedPostsPage = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Loading saved posts...</div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {[1, 2].map((i) => <PostSkeleton key={i} />)}
+                </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {savedPosts.length === 0 ? (

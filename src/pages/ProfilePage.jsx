@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Hash, BookOpen, Upload, CheckCircle, Save, Edit2, X, Camera } from 'lucide-react';
-import { api } from '../utils/api';
+import { api } from '../services/api';
+import toast from 'react-hot-toast';
 
 const ProfilePage = () => {
     const { user } = useAuth();
@@ -45,9 +46,10 @@ const ProfilePage = () => {
         try {
             await api.profile.verifyIdCard(user.uid, file);
             setIsVerified(true);
+            toast.success("ID Card uploaded successfully!");
         } catch (error) {
             console.error("Failed to upload ID card", error);
-            alert("Failed to upload ID card. Please try again.");
+            toast.error("Failed to upload ID card. Please try again.");
         } finally {
             setIsUploading(false);
         }
@@ -59,10 +61,11 @@ const ProfilePage = () => {
         try {
             await api.profile.updateProfile(user.uid, { bio: bioText });
             setIsEditingBio(false);
-            window.location.reload(); 
+            toast.success("Bio updated successfully!");
+            setTimeout(() => window.location.reload(), 1000); 
         } catch(e) {
             console.error(e);
-            alert("Failed to save bio.");
+            toast.error("Failed to save bio.");
             setIsSaving(false);
         }
     };
@@ -71,7 +74,7 @@ const ProfilePage = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 800000) { // 800KB max to be safe for 1MB Firestore limit
-                alert("Image size is too large (must be under 800KB). Please select a smaller file.");
+                toast.error("Image size is too large (must be under 800KB). Please select a smaller file.");
                 return;
             }
             const reader = new FileReader();
@@ -90,10 +93,11 @@ const ProfilePage = () => {
         try {
             await api.profile.updateProfile(user.uid, { avatar: finalAvatar });
             setIsEditingAvatar(false);
-            window.location.reload(); 
+            toast.success("Profile picture updated!");
+            setTimeout(() => window.location.reload(), 1000); 
         } catch(e) {
             console.error(e);
-            alert("Failed to save profile picture.");
+            toast.error("Failed to save profile picture.");
             setIsSaving(false);
         }
     };
@@ -104,10 +108,11 @@ const ProfilePage = () => {
         try {
             await api.profile.updateProfile(user.uid, { avatar: '' });
             setIsEditingAvatar(false);
-            window.location.reload(); 
+            toast.success("Profile picture removed!");
+            setTimeout(() => window.location.reload(), 1000); 
         } catch(e) {
             console.error(e);
-            alert("Failed to remove profile picture.");
+            toast.error("Failed to remove profile picture.");
             setIsSaving(false);
         }
     };

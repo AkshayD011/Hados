@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../services/api';
 import { Calendar as CalendarIcon, Clock, BookOpen, PartyPopper, GraduationCap, Users, AlertTriangle } from 'lucide-react';
+import { CalendarSkeleton } from '../components/ui/Skeleton';
 
 const typeConfig = {
     Holiday:  { color: '#e74c3c', bg: 'rgba(231, 76, 60, 0.08)',  icon: PartyPopper },
@@ -66,7 +67,9 @@ const CalendarPage = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Loading calendar...</div>
+                <div>
+                    {[1, 2, 3, 4].map((i) => <CalendarSkeleton key={i} />)}
+                </div>
             ) : filtered.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }}>
                     <CalendarIcon size={48} style={{ margin: '0 auto 1rem', opacity: 0.4 }} />

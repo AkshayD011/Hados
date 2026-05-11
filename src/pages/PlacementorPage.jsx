@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api } from '../services/api';
 import { Briefcase, Building, Calendar as CalendarIcon, DollarSign, ChevronRight, CheckCircle } from 'lucide-react';
+import { PlacementorSkeleton } from '../components/ui/Skeleton';
 
 const PlacementorPage = () => {
     const [updates, setUpdates] = useState([]);
@@ -43,12 +44,14 @@ const PlacementorPage = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>Loading updates...</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {[1, 2, 3].map((i) => <PlacementorSkeleton key={i} />)}
+                </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {updates.map(update => (
                         <div key={update.id} className="glass card-base animate-fade-in" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div className="flex-col-sm" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
                                 <div>
                                     <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{update.company}</h3>
                                     <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.95rem' }}>

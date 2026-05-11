@@ -4,7 +4,7 @@ import {
     Home, Hash, Calendar, Map, Users, HelpCircle,
     Briefcase, Bookmark, LogOut, ChevronRight, ExternalLink, X
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { user, logout } = useAuth();
