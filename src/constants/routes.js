@@ -18,5 +18,4 @@ export const ROUTES = {
   ADMIN_LOST_FOUND:   '/admin/lost-found',
   ADMIN_REPORTS:      '/admin/reports',
   ADMIN_ACTIVITY:     '/admin/activity',
-  ADMIN_SETUP:        '/admin-setup',
 };

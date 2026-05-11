@@ -1,46 +1,8 @@
 # Hados Admin Access & Role Management
 
-This document explains how to set up administrative access and manage user roles within the Hados application.
+This document explains how to manage user roles and administrative access within the Hados application.
 
-## 1. Initial Setup (Bootstrapping the first Admin)
-
-To prevent hardcoded credentials in the source code, Hados uses a **Setup Key** mechanism.
-
-### Method A: Web Bootstrap (Recommended for Dev/Staging)
-1.  Open your `.env` file (or environment variables in your hosting provider).
-2.  Set `VITE_ADMIN_SETUP_KEY` to a strong secret string.
-    ```env
-    VITE_ADMIN_SETUP_KEY=my_secure_bootstrap_key_123
-    ```
-3.  Restart your development server (`npm run dev`).
-4.  Log in to the Hados app with your standard account.
-5.  Navigate to `/admin-setup` in your browser.
-6.  Enter the secret key and click **Promote to Admin**.
-7.  **IMPORTANT:** Once the first admin is created, you should remove this environment variable from production to close the setup route.
-
-### Method B: Firebase Console (Direct Database Access)
-1.  Go to the [Firebase Console](https://console.firebase.google.com/).
-2.  Navigate to **Firestore Database**.
-3.  Locate the `users` collection.
-4.  Find your user document (by UID or Email).
-5.  Edit the `role` field from `"student"` to `"admin"`.
-6.  Refresh the app.
-
----
-
-## 2. Managing Other Users
-
-Once you have one Admin account, you can manage all other users through the built-in UI:
-
-1.  Navigate to the **Admin Dashboard**.
-2.  Go to the **Users** section.
-3.  Search for a user by name or email.
-4.  Use the **Role Selector** dropdown to promote or demote users instantly.
-5.  All role changes are logged in the **Activity Log** for audit purposes.
-
----
-
-## 3. Role Definitions
+## 1. Role Definitions
 
 | Role | Description | Capabilities |
 | :--- | :--- | :--- |
@@ -49,8 +11,30 @@ Once you have one Admin account, you can manage all other users through the buil
 
 ---
 
-## 4. Security Best Practices
+## 2. Managing User Roles
 
-*   **Audit Logs**: Regularly check the **Activity Log** in the admin panel to monitor role changes and moderation actions.
-*   **Principle of Least Privilege**: Only grant the `admin` role to trusted individuals.
-*   **No Hardcoding**: Never hardcode admin emails in the codebase. Always use the Firestore `role` field as the source of truth.
+Administrative access is managed strictly through Firestore role-based authorization. There are two ways to promote a user to Admin:
+
+### Method A: Admin Dashboard (Recommended)
+1.  Log in with an existing **Admin** account.
+2.  Navigate to the **Admin Dashboard** > **Users** section.
+3.  Search for the user you wish to promote.
+4.  Use the **Role Selector** dropdown to select `Admin`.
+5.  The change takes effect immediately for that user.
+
+### Method B: Firebase Console (Direct Database Access)
+Use this method if there are no existing admins or for manual overrides:
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Navigate to **Firestore Database**.
+3.  Locate the `users` collection.
+4.  Find the user document (by UID or Email).
+5.  Edit the `role` field from `"student"` to `"admin"`.
+6.  The user must refresh the application to see the changes.
+
+---
+
+## 3. Auditing & Security
+
+*   **Activity Logs**: Every role change is automatically recorded in the **Activity Log** (accessible in the Admin Panel). This includes the timestamp, the admin who performed the action, and the previous/new role.
+*   **Principle of Least Privilege**: Only grant the `admin` role to highly trusted individuals. Standard moderation can be handled via the Reports system.
+*   **Production Safety**: The temporary bootstrap mechanism (`/admin-setup`) has been removed from the application. Roles are now gated strictly by authenticated session claims and database state.
