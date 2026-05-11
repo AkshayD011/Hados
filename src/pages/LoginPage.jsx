@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 import { FieldError, inputBorderStyle, PasswordStrengthBar } from '../components/ui/FormField';
 import useFormValidation, { required, minLength, isEmail, isUniversityEmail, combine, passwordStrength } from '../hooks/useFormValidation';
 
+import { ROLES } from '../utils/roles';
+import { getDocument } from '../services/firebase/firestore';
+
 // ─── Base input style reused across all fields ─────────────────────────────
 const baseInput = {
     padding: '0.75rem',
@@ -20,6 +23,7 @@ const baseInput = {
 
 const LoginPage = () => {
     const [isRegistering, setIsRegistering] = useState(false);
+    const [loginMode, setLoginMode] = useState('user'); // 'user' or 'admin'
 
     // Form states
     const [name, setName] = useState('');
@@ -60,8 +64,15 @@ const LoginPage = () => {
     );
 
     useEffect(() => {
-        if (isAuthenticated) navigate('/');
-    }, [isAuthenticated, navigate]);
+        // Only auto-redirect if we aren't in the middle of a login process
+        if (isAuthenticated && !loading) {
+            if (user?.role === ROLES.ADMIN && loginMode === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/');
+            }
+        }
+    }, [isAuthenticated, user, navigate, loading, loginMode]);
 
     const markTouched = (field) => setTouched(prev => ({ ...prev, [field]: true }));
 
@@ -82,8 +93,23 @@ const LoginPage = () => {
                 toast.success('Registration successful! Please check your university email.');
                 setIsRegistering(false);
             } else {
-                await login(email, password);
-                toast.success('Signed in successfully!');
+                const firebaseUser = await login(email, password);
+
+                // If in Admin mode, we must verify role immediately
+                if (loginMode === 'admin') {
+                    const userDoc = await getDocument('users', firebaseUser.uid);
+                    if (userDoc.role !== ROLES.ADMIN) {
+                        await logout();
+                        toast.error('Access Denied: This account does not have administrative privileges.', { icon: '🛡️' });
+                        setLoading(false);
+                        return;
+                    }
+                    toast.success('Admin authenticated successfully!');
+                    navigate('/admin/dashboard');
+                } else {
+                    toast.success('Signed in successfully!');
+                    navigate('/');
+                }
             }
         } catch (err) {
             let errorMsg = err.message || 'Something went wrong';
@@ -180,19 +206,73 @@ const LoginPage = () => {
                 }} />
 
                 {/* Header */}
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                     <div style={{
                         display: 'inline-flex', padding: '1rem',
-                        backgroundColor: 'var(--primary)', borderRadius: '1rem',
-                        marginBottom: '1rem', color: 'white'
+                        backgroundColor: loginMode === 'admin' ? 'var(--text-primary)' : 'var(--primary)', 
+                        borderRadius: '1rem',
+                        marginBottom: '1rem', color: 'white',
+                        transition: 'background-color 0.3s ease'
                     }}>
                         <GraduationCap size={40} />
                     </div>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)' }}>Hados</h1>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: loginMode === 'admin' ? 'var(--text-primary)' : 'var(--primary)' }}>Hados</h1>
                     <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                        {isRegistering ? 'Create your university account' : 'Sign in to Mailer Daemon'}
+                        {isRegistering ? 'Create your university account' : 
+                         loginMode === 'admin' ? 'Admin Control Center' : 'Sign in to Mailer Daemon'}
                     </p>
                 </div>
+
+                {/* Role Toggle */}
+                {!isRegistering && !verificationPending && (
+                    <div style={{ 
+                        display: 'flex', 
+                        backgroundColor: 'var(--surface-hover)', 
+                        padding: '0.25rem', 
+                        borderRadius: '0.75rem', 
+                        marginBottom: '1.5rem',
+                        position: 'relative'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={() => setLoginMode('user')}
+                            style={{ 
+                                flex: 1, padding: '0.625rem', borderRadius: '0.5rem', border: 'none', 
+                                background: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '700',
+                                color: loginMode === 'user' ? 'var(--primary)' : 'var(--text-tertiary)',
+                                position: 'relative', zIndex: 2, transition: 'color 0.2s'
+                            }}
+                        >
+                            User Portal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLoginMode('admin')}
+                            style={{ 
+                                flex: 1, padding: '0.625rem', borderRadius: '0.5rem', border: 'none', 
+                                background: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '700',
+                                color: loginMode === 'admin' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                                position: 'relative', zIndex: 2, transition: 'color 0.2s'
+                            }}
+                        >
+                            Admin Access
+                        </button>
+                        
+                        {/* Sliding background */}
+                        <motion.div
+                            animate={{ x: loginMode === 'user' ? 0 : '100%' }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            style={{
+                                position: 'absolute', top: '0.25rem', left: '0.25rem',
+                                width: 'calc(50% - 0.25rem)', height: 'calc(100% - 0.5rem)',
+                                backgroundColor: 'var(--surface)',
+                                borderRadius: '0.5rem',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                zIndex: 1
+                            }}
+                        />
+                    </div>
+                )}
 
                 {verificationPending ? (
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center' }}>
