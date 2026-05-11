@@ -9,6 +9,7 @@ import { placementApi } from './placement.api';
 import { calendarApi } from './calendar.api';
 import { notificationsApi } from './notifications.api';
 import { dbAdminApi } from './dbAdmin.api';
+import { moderationApi } from './moderation.api';
 
 export const api = {
     auth: authApi,
@@ -21,5 +22,6 @@ export const api = {
     placement: placementApi,
     calendar: calendarApi,
     notifications: notificationsApi,
-    purgeDummyData: dbAdminApi.purgeDummyData
+    purgeDummyData: dbAdminApi.purgeDummyData,
+    moderation: moderationApi,
 };

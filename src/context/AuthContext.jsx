@@ -181,6 +181,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ─── Generic field update (admin use) ─────────────────────────────────────
+    /**
+     * Patch any fields on a user document.
+     * Used for admin actions like suspend/unsuspend, verify ID, etc.
+     *
+     * @param {string} targetUid — UID of the user to patch
+     * @param {object} fields    — partial Firestore document to merge
+     */
+    const updateUserField = async (targetUid, fields) => {
+        await updateDocument('users', targetUid, fields);
+        if (user && user.uid === targetUid) {
+            setUser(prev => ({ ...prev, ...fields }));
+        }
+    };
+
     // ─── Convenience role checks (derived from current user) ─────────────────
     const roleChecks = {
         /** True if the current user has the admin role. */
@@ -223,6 +238,7 @@ export const AuthProvider = ({ children }) => {
 
         // Role management
         updateUserRole,
+        updateUserField,
         ROLES,
 
         // Convenience role checks (mirrors useRole hook for simple consumers)
