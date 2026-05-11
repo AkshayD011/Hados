@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import PostCard from '../components/common/PostCard';
 import TrendingWidget from '../components/common/TrendingWidget';
 import { api } from '../services/api';
