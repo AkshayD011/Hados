@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Search, MapPin, Navigation, Clock, Compass } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { Search, Navigation, Clock, Compass } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { MapLoadingOverlay } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 
@@ -31,6 +33,43 @@ const MapPage = () => {
         poi.type.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Custom icon generator
+    const getCustomIcon = (poi, selectedPoiId) => {
+        const isSelected = selectedPoiId === poi.id;
+        const color = isSelected ? '#3b82f6' : '#1a237e'; // accent vs primary
+        const scale = isSelected ? 'scale(1.2)' : 'scale(1)';
+        const fill = isSelected ? color : 'none';
+
+        const svgMarkup = `
+            <div style="color: ${color}; transform: ${scale}; transition: transform 0.2s; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </div>
+        `;
+
+        return L.divIcon({
+            html: svgMarkup,
+            className: 'custom-map-marker',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36], // Point anchor to bottom center
+        });
+    };
+
+    // Component to handle dynamic map centering when a POI is selected
+    const MapController = ({ selectedPoi }) => {
+        const map = useMap();
+        useEffect(() => {
+            if (selectedPoi) {
+                map.flyTo([selectedPoi.location.lat, selectedPoi.location.lng], 18, {
+                    duration: 1.5
+                });
+            }
+        }, [selectedPoi, map]);
+        return null;
+    };
+
     return (
         <div className="map-page animate-fade-in" style={{ paddingBottom: '2rem' }}>
             <div style={{ marginBottom: '1.5rem' }}>
@@ -56,7 +95,7 @@ const MapPage = () => {
                 />
             </div>
 
-            {/* Google Map Area */}
+            {/* Leaflet Map Area */}
             <div className="glass card-base" style={{ 
                 height: '400px', 
                 marginBottom: '1.5rem', 
@@ -67,33 +106,28 @@ const MapPage = () => {
                 {loading ? (
                     <MapLoadingOverlay />
                 ) : (
-                    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
-                        <Map
-                            defaultZoom={17}
-                            defaultCenter={{ lat: 12.8767, lng: 77.6846 }}
-                            mapId="HADOS_CAMPUS_MAP"
-                            disableDefaultUI={true}
-                            style={{ width: '100%', height: '100%' }}
-                        >
-                            {filteredPois.map(poi => (
-                                <AdvancedMarker 
-                                    key={poi.id}
-                                    position={{ lat: poi.location.lat, lng: poi.location.lng }}
-                                    onClick={() => setSelectedPoi(poi)}
-                                >
-                                    <div style={{
-                                        color: selectedPoi?.id === poi.id ? 'var(--accent)' : 'var(--primary)',
-                                        cursor: 'pointer',
-                                        transform: selectedPoi?.id === poi.id ? 'scale(1.2)' : 'scale(1)',
-                                        transition: 'transform 0.2s',
-                                        filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))'
-                                    }}>
-                                        <MapPin size={36} weight={selectedPoi?.id === poi.id ? "fill" : "regular"} />
-                                    </div>
-                                </AdvancedMarker>
-                            ))}
-                        </Map>
-                    </APIProvider>
+                    <MapContainer 
+                        center={[12.8767, 77.6846]} 
+                        zoom={17} 
+                        style={{ height: '100%', width: '100%', zIndex: 1 }}
+                        zoomControl={false}
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                        />
+                        <MapController selectedPoi={selectedPoi} />
+                        {filteredPois.map(poi => (
+                            <Marker
+                                key={poi.id}
+                                position={[poi.location.lat, poi.location.lng]}
+                                icon={getCustomIcon(poi, selectedPoi?.id)}
+                                eventHandlers={{
+                                    click: () => setSelectedPoi(poi),
+                                }}
+                            />
+                        ))}
+                    </MapContainer>
                 )}
             </div>
 
