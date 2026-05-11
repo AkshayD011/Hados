@@ -11,49 +11,85 @@ const TrendingWidget = () => {
         const fetchTags = async () => {
             try {
                 const data = await api.hashtags.getTrending();
-                setHashtags(data.slice(0, 5)); // Just top 5 for widget
+                setHashtags(data.slice(0, 5));
             } catch (error) {
-                console.error("Failed to fetch hashtags", error);
+                console.error('Failed to fetch hashtags', error);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchTags();
     }, []);
 
     return (
-        <div className="glass card-base animate-fade-in" style={{ padding: '1.25rem', position: 'sticky', top: '80px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
-                <TrendingUp size={20} color="var(--primary)" />
-                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>Trending Now</h2>
+        <div
+            className="glass card-base animate-fade-in"
+            style={{ padding: '1.375rem', position: 'sticky', top: '80px' }}
+        >
+            {/* Header */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                paddingBottom: '0.875rem',
+                borderBottom: '1px solid var(--border)'
+            }}>
+                <div style={{
+                    width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--primary-alpha-10)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0
+                }}>
+                    <TrendingUp size={17} color="var(--primary)" />
+                </div>
+                <h2 style={{
+                    fontSize: 'var(--text-lg)',
+                    fontWeight: '800',
+                    color: 'var(--text-primary)',
+                    letterSpacing: '-0.015em',
+                    margin: 0
+                }}>
+                    Trending Now
+                </h2>
             </div>
-            
+
             {loading ? (
                 <TrendingWidgetSkeleton />
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {hashtags.map((item, index) => (
-                        <div key={item.tag} style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center', 
-                                padding: '0.75rem',
+                        <div
+                            key={item.tag}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0.625rem 0.5rem',
                                 borderBottom: index < hashtags.length - 1 ? '1px solid var(--border)' : 'none',
                                 cursor: 'pointer',
-                                borderRadius: '0.5rem',
-                                transition: 'background-color 0.2s',
-                                marginTop: '0.25rem'
-                            }} 
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(26, 35, 126, 0.05)'}
+                                borderRadius: 'var(--radius-sm)',
+                                transition: 'background-color 0.18s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-alpha-10)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trending in Campus</span>
-                                <div style={{ display: 'flex', alignItems: 'center', fontWeight: '700', color: 'var(--text-primary)', marginTop: '0.2rem', fontSize: '1rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                <span className="label-caps">Trending in Campus</span>
+                                <span style={{
+                                    fontWeight: '700',
+                                    color: 'var(--text-primary)',
+                                    fontSize: 'var(--text-base)',
+                                    letterSpacing: '-0.01em'
+                                }}>
                                     #{item.tag}
-                                </div>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.2rem' }}>{item.count} posts</span>
+                                </span>
+                                <span style={{
+                                    fontSize: 'var(--text-xs)',
+                                    color: 'var(--text-tertiary)'
+                                }}>
+                                    {item.count} post{item.count !== 1 ? 's' : ''}
+                                </span>
                             </div>
                         </div>
                     ))}
