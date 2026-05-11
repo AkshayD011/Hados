@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Search, MapPin, Navigation, Clock, Compass } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { MapLoadingOverlay } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 
@@ -55,43 +56,44 @@ const MapPage = () => {
                 />
             </div>
 
-            {/* Mock Map Area */}
+            {/* Google Map Area */}
             <div className="glass card-base" style={{ 
-                height: '300px', 
+                height: '400px', 
                 marginBottom: '1.5rem', 
                 position: 'relative',
                 overflow: 'hidden',
-                backgroundColor: '#e9ecef',
-                backgroundImage: 'radial-gradient(#ced4da 1px, transparent 1px)',
-                backgroundSize: '20px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                borderRadius: 'var(--radius-lg)'
             }}>
                 {loading ? (
                     <MapLoadingOverlay />
                 ) : (
-                    <>
-                        {filteredPois.map(poi => (
-                            <div 
-                                key={poi.id}
-                                onClick={() => setSelectedPoi(poi)}
-                                style={{
-                                    position: 'absolute',
-                                    left: `${poi.location.x}%`,
-                                    top: `${poi.location.y}%`,
-                                    transform: 'translate(-50%, -50%)',
-                                    color: selectedPoi?.id === poi.id ? 'var(--accent)' : 'var(--primary)',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s',
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.2)'}
-                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)'}
-                            >
-                                <MapPin size={32} weight={selectedPoi?.id === poi.id ? "fill" : "regular"} />
-                            </div>
-                        ))}
-                    </>
+                    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+                        <Map
+                            defaultZoom={17}
+                            defaultCenter={{ lat: 12.8767, lng: 77.6846 }}
+                            mapId="HADOS_CAMPUS_MAP"
+                            disableDefaultUI={true}
+                            style={{ width: '100%', height: '100%' }}
+                        >
+                            {filteredPois.map(poi => (
+                                <AdvancedMarker 
+                                    key={poi.id}
+                                    position={{ lat: poi.location.lat, lng: poi.location.lng }}
+                                    onClick={() => setSelectedPoi(poi)}
+                                >
+                                    <div style={{
+                                        color: selectedPoi?.id === poi.id ? 'var(--accent)' : 'var(--primary)',
+                                        cursor: 'pointer',
+                                        transform: selectedPoi?.id === poi.id ? 'scale(1.2)' : 'scale(1)',
+                                        transition: 'transform 0.2s',
+                                        filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))'
+                                    }}>
+                                        <MapPin size={36} weight={selectedPoi?.id === poi.id ? "fill" : "regular"} />
+                                    </div>
+                                </AdvancedMarker>
+                            ))}
+                        </Map>
+                    </APIProvider>
                 )}
             </div>
 
