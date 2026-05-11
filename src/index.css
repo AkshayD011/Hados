@@ -234,30 +234,103 @@ input:focus {
   );
 }
 
-/* Responsive Utilities */
+/* ============================================================
+   RESPONSIVE UTILITIES — Vanilla CSS Mobile-First System
+   Breakpoints: 1024px | 768px | 640px | 375px | 320px
+   ============================================================ */
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure all images and media don't overflow */
+img, video, iframe, embed {
+  max-width: 100%;
+}
+
+/* ---- 1024px (Tablet Landscape) ---- */
 @media (max-width: 1024px) {
   .hide-lg { display: none !important; }
   .flex-col-lg { flex-direction: column !important; }
   .w-full-lg { width: 100% !important; flex: none !important; }
+  .gap-lg-sm { gap: 1rem !important; }
 }
 
+/* ---- 768px (Tablet Portrait) ---- */
 @media (max-width: 768px) {
   .hide-md { display: none !important; }
   .flex-col-md { flex-direction: column !important; }
   .grid-1-col-md { grid-template-columns: 1fr !important; }
+  .grid-2-col-md { grid-template-columns: 1fr 1fr !important; }
   .w-full-md { width: 100% !important; flex: none !important; }
-  main.p-md { padding: 1rem !important; }
+  main.p-md { padding: 1.25rem !important; }
+
+  /* Cards should not have fixed min widths on tablet */
+  .card-base { min-width: 0 !important; }
+
+  /* Notification dropdown: full width on tablet */
+  .notif-dropdown { 
+    width: calc(100vw - 2rem) !important; 
+    right: -1rem !important; 
+  }
 }
 
+/* ---- 640px (Mobile Landscape / Large Phone) ---- */
 @media (max-width: 640px) {
   .hide-sm { display: none !important; }
   .show-sm { display: block !important; }
   .flex-col-sm { flex-direction: column !important; }
   .p-sm { padding: 1rem !important; }
   .text-sm-mobile { font-size: 0.875rem !important; }
-  .text-md-mobile { font-size: 1rem !important; }
+  .text-md-mobile { font-size: 1.1rem !important; }
+  .gap-sm-xs { gap: 0.5rem !important; }
+
+  /* Main content full padding reduction */
+  main.p-md { padding: 1rem !important; }
+
+  /* Modal: tighter on small phones */
+  .modal-inner {
+    width: 95% !important;
+    padding: 1.5rem 1.25rem !important;
+    max-height: 95vh !important;
+  }
+
+  /* Feed heading */
+  .feed-heading h2 { font-size: 1.25rem !important; }
+  .feed-heading p { font-size: 0.8rem !important; }
+
+  /* Buttons: full width on mobile */
+  .btn-full-sm { width: 100% !important; justify-content: center !important; }
+
+  /* Table/card overflow */
+  .overflow-sm { overflow-x: auto !important; }
 }
 
+/* ---- 375px (Standard Mobile Portrait) ---- */
 @media (max-width: 375px) {
   .hide-xs { display: none !important; }
+  main.p-md { padding: 0.75rem !important; }
+
+  /* Header brand title shrink */
+  .header-title { font-size: 1.1rem !important; }
+
+  /* Reduce card padding */
+  .card-base { border-radius: 0.875rem !important; }
+
+  /* Input/button touch targets: min 44px for accessibility */
+  input, textarea, select, button {
+    min-height: 44px;
+  }
+
+  /* Tighter gaps on very small screens */
+  .feed { gap: 1rem !important; }
+}
+
+/* ---- 320px (Smallest Supported Mobile) ---- */
+@media (max-width: 320px) {
+  main.p-md { padding: 0.5rem !important; }
+  .header-title { font-size: 1rem !important; }
+  .btn-primary { padding: 0.75rem 1rem !important; font-size: 0.875rem !important; }
 }

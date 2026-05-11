@@ -26,23 +26,24 @@ const Header = ({ onMenuClick }) => {
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            padding: '0.75rem 2rem',
+            padding: '0.75rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid var(--border)'
+            borderBottom: '1px solid var(--border)',
+            overflow: 'visible'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
                 <button 
                     onClick={onMenuClick}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--primary)' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--primary)', flexShrink: 0 }}
                 >
                     <Menu size={24} />
                 </button>
-                <h1 className="text-md-mobile" style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em', margin: 0 }}>Hados</h1>
+                <h1 className="header-title text-md-mobile" style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.025em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Hados</h1>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', position: 'relative', flexShrink: 0 }}>
                 <button 
                     style={{ background: 'none', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
                     onClick={toggleTheme}
@@ -65,7 +66,7 @@ const Header = ({ onMenuClick }) => {
                 </button>
 
                 {showNotifs && (
-                    <div className="glass card-base animate-fade-in" style={{
+                    <div className="glass card-base animate-fade-in notif-dropdown" style={{
                         position: 'absolute', top: '100%', right: '0', width: '300px',
                         padding: '1rem', marginTop: '0.5rem', zIndex: 101, display: 'flex', flexDirection: 'column', gap: '0.75rem'
                     }}>
@@ -97,10 +98,11 @@ const Header = ({ onMenuClick }) => {
                     justifyContent: 'center',
                     fontSize: '0.875rem',
                     fontWeight: 'bold',
-                    marginLeft: '0.5rem',
+                    marginLeft: '0.25rem',
                     cursor: 'pointer',
                     textDecoration: 'none',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    flexShrink: 0
                 }}>
                     {user?.avatar ? (
                         <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

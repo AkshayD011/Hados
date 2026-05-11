@@ -71,8 +71,8 @@ const HomePage = () => {
     return (
         <div className="flex-col-lg" style={{ display: 'flex', gap: '2rem', width: '100%', alignItems: 'flex-start' }}>
             <div className="home-page animate-fade-in w-full-lg" style={{ flex: '0 0 68.75%', minWidth: 0 }}>
-                <div style={{ marginBottom: '2.5rem', marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                <div className="feed-heading" style={{ marginBottom: '2rem', marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ minWidth: 0 }}>
                         <h2 className="text-md-mobile" style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>Welcome to Mailer Daemon</h2>
                         <p className="text-sm-mobile" style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Official campus announcements and essential updates</p>
                     </div>
@@ -90,7 +90,8 @@ const HomePage = () => {
                             border: 'none',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(26, 35, 126, 0.2)'
+                            boxShadow: '0 4px 12px rgba(26, 35, 126, 0.2)',
+                            flexShrink: 0
                         }}
                     >
                         <Plus size={20} />
@@ -133,7 +134,7 @@ const HomePage = () => {
                     zIndex: 1000,
                     backdropFilter: 'blur(4px)'
                 }}>
-                    <div className="glass card-base animate-fade-in" style={{
+                    <div className="glass card-base animate-fade-in modal-inner" style={{
                         width: '90%',
                         maxWidth: '500px',
                         padding: '2rem',

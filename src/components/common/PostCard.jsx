@@ -39,8 +39,8 @@ const PostCard = ({ post }) => {
             padding: '1.25rem',
             marginBottom: '1.5rem',
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
                     <div style={{
                         width: '40px',
                         height: '40px',
@@ -51,24 +51,25 @@ const PostCard = ({ post }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 'bold',
-                        fontSize: '0.875rem'
+                        fontSize: '0.875rem',
+                        flexShrink: 0
                     }}>
                         MD
                     </div>
-                    <div>
-                        <h3 style={{ fontSize: '0.9375rem', fontWeight: '700' }}>Mailer Daemon</h3>
+                    <div style={{ minWidth: 0 }}>
+                        <h3 style={{ fontSize: '0.9375rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Mailer Daemon</h3>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             {new Date(post.timestamp).toLocaleString()}
                         </p>
                     </div>
                 </div>
-                <button style={{ background: 'none', color: 'var(--text-secondary)' }}>
+                <button style={{ background: 'none', color: 'var(--text-secondary)', flexShrink: 0 }}>
                     <MoreHorizontal size={20} />
                 </button>
             </div>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--primary)' }}>{post.title}</h2>
-            <p style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '0.9375rem' }}>{post.description}</p>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--primary)', wordBreak: 'break-word' }}>{post.title}</h2>
+            <p style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '0.9375rem', wordBreak: 'break-word', lineHeight: '1.6' }}>{post.description}</p>
 
             {/* Mock Carousel */}
             <div style={{

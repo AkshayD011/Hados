@@ -90,17 +90,17 @@ const LostFoundPage = () => {
 
     return (
         <div className="lost-found-page animate-fade-in" style={{ paddingBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '0.25rem' }}>Lost & Found</h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Report or claim lost items on campus.</p>
                 </div>
                 <button 
                     className="btn-primary" 
-                    style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}
                     onClick={() => setShowReportModal(true)}
                 >
-                    <Plus size={18} /> <span className="hide-mobile">Report Item</span>
+                    <Plus size={18} /> <span className="hide-sm">Report Item</span>
                 </button>
             </div>
 
