@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import EmptyState from '../common/EmptyState';
 
 const Header = ({ onMenuClick }) => {
     const { user } = useAuth();
@@ -75,7 +76,12 @@ const Header = ({ onMenuClick }) => {
                             <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} /></button>
                         </div>
                         {notifications.length === 0 ? (
-                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>No new notifications.</p>
+                            <EmptyState
+                                icon={Bell}
+                                title="All caught up!"
+                                message="No new notifications right now. Check back later."
+                                compact
+                            />
                         ) : (
                             notifications.map(n => (
                                 <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', opacity: n.unread ? 1 : 0.6 }}>

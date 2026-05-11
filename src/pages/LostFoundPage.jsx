@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail } from 'lucide-react';
+import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail, PackageSearch } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LostItemSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const LostFoundPage = () => {
     const { user } = useAuth();
@@ -177,8 +178,22 @@ const LostFoundPage = () => {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {filteredItems.length === 0 ? (
-                        <div className="glass card-base" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
-                            <p style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>No items found matching your criteria.</p>
+                        <div className="glass card-base">
+                            {searchQuery || filter !== 'All' ? (
+                                <EmptyState
+                                    icon={Search}
+                                    title="No matching items"
+                                    message={`No ${filter !== 'All' ? filter.toLowerCase() + ' ' : ''}items match "${searchQuery || filter}". Try adjusting your search or filter.`}
+                                    action={{ label: 'Clear Search', icon: X, onClick: () => { setSearchQuery(''); setFilter('All'); } }}
+                                />
+                            ) : (
+                                <EmptyState
+                                    icon={PackageSearch}
+                                    title="Nothing lost or found yet"
+                                    message="Be the first to report a lost or found item on campus. Help your fellow students!"
+                                    action={{ label: 'Report an Item', icon: Plus, onClick: () => setShowReportModal(true) }}
+                                />
+                            )}
                         </div>
                     ) : (
                         filteredItems.map(item => (

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Search, MapPin, Navigation, Clock } from 'lucide-react';
+import { Search, MapPin, Navigation, Clock, Compass } from 'lucide-react';
 import { MapLoadingOverlay } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const MapPage = () => {
     const [pois, setPois] = useState([]);
@@ -122,9 +123,14 @@ const MapPage = () => {
             )}
 
             {!selectedPoi && !loading && (
-                 <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem 0', fontSize: '0.9rem' }}>
-                    Select a pin on the map to view details.
-                 </div>
+                <div className="glass card-base">
+                    <EmptyState
+                        icon={Compass}
+                        title="No location selected"
+                        message="Tap any pin on the map above to view building details, hours, and navigation."
+                        compact
+                    />
+                </div>
             )}
         </div>
     );

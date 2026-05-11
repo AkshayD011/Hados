@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import PostCard from '../components/common/PostCard';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, Home } from 'lucide-react';
 import { PostSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const SavedPostsPage = () => {
     const [savedPosts, setSavedPosts] = useState([]);
@@ -43,10 +44,13 @@ const SavedPostsPage = () => {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {savedPosts.length === 0 ? (
-                        <div className="glass card-base" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
-                            <Bookmark size={48} color="var(--border)" style={{ margin: '0 auto 1rem' }} />
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No saved posts yet</h3>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Click the bookmark icon on any post to save it for later.</p>
+                        <div className="glass card-base">
+                            <EmptyState
+                                icon={Bookmark}
+                                title="No saved posts yet"
+                                message="Tap the bookmark icon on any announcement to save it here for easy access."
+                                action={{ label: 'Browse Feed', to: '/', icon: Home }}
+                            />
                         </div>
                     ) : (
                         savedPosts.map(post => <PostCard key={post.id} post={post} />)

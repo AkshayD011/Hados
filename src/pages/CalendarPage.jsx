@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Calendar as CalendarIcon, Clock, BookOpen, PartyPopper, GraduationCap, Users, AlertTriangle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, BookOpen, PartyPopper, GraduationCap, Users, AlertTriangle, X } from 'lucide-react';
 import { CalendarSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const typeConfig = {
     Holiday:  { color: '#e74c3c', bg: 'rgba(231, 76, 60, 0.08)',  icon: PartyPopper },
@@ -71,10 +72,13 @@ const CalendarPage = () => {
                     {[1, 2, 3, 4].map((i) => <CalendarSkeleton key={i} />)}
                 </div>
             ) : filtered.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }}>
-                    <CalendarIcon size={48} style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
-                    <h3 style={{ fontWeight: '600', color: 'var(--text-primary)' }}>No events found</h3>
-                    <p>No calendar events match this filter.</p>
+                <div className="glass card-base">
+                    <EmptyState
+                        icon={CalendarIcon}
+                        title="No events found"
+                        message={filter !== 'All' ? `No "${filter}" events scheduled. Try a different category.` : 'No academic events have been added yet.'}
+                        action={filter !== 'All' ? { label: 'Show All Events', icon: X, onClick: () => setFilter('All') } : undefined}
+                    />
                 </div>
             ) : (
                 <div className="glass card-base" style={{ padding: '0.5rem' }}>

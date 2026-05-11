@@ -6,6 +6,7 @@ import { FileText, Plus, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { PostSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const HomePage = () => {
     const { user } = useAuth();
@@ -109,10 +110,17 @@ const HomePage = () => {
                             <PostCard key={post.id} post={post} />
                         ))
                     ) : (
-                        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-secondary)' }}>
-                            <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)' }}>No posts available</h3>
-                            <p>Check back later for official campus updates.</p>
+                        <div className="glass card-base">
+                            <EmptyState
+                                icon={FileText}
+                                title="No announcements yet"
+                                message="Official campus posts will appear here. Be the first to publish an update."
+                                action={{
+                                    label: 'Create Post',
+                                    icon: Plus,
+                                    onClick: () => setShowCreateModal(true)
+                                }}
+                            />
                         </div>
                     )}
                 </div>

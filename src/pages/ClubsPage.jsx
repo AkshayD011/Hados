@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Users, ChevronRight, Activity } from 'lucide-react';
+import { Users, ChevronRight, Activity, RefreshCw } from 'lucide-react';
 import { ClubSkeleton } from '../components/ui/Skeleton';
+import EmptyState from '../components/common/EmptyState';
 
 const ClubsPage = () => {
     const [clubs, setClubs] = useState([]);
@@ -44,6 +45,15 @@ const ClubsPage = () => {
             {loading ? (
                 <div className="grid-1-col-md" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {[1, 2, 3, 4, 5, 6].map((i) => <ClubSkeleton key={i} />)}
+                </div>
+            ) : clubs.length === 0 ? (
+                <div className="glass card-base">
+                    <EmptyState
+                        icon={Users}
+                        title="No clubs found"
+                        message="Student clubs haven't been loaded yet. Try refreshing the page."
+                        action={{ label: 'Refresh', icon: RefreshCw, onClick: () => window.location.reload() }}
+                    />
                 </div>
             ) : (
                 <div className="grid-1-col-md" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
