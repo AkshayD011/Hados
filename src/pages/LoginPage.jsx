@@ -21,6 +21,20 @@ const baseInput = {
     color: 'var(--text-primary)',
 };
 
+// ─── Shared input+error block ───────────────────────────────────────────
+const Field = ({ id, label, required: req, hint, errors, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+            {label}{req && <span style={{ color: 'var(--error)', marginLeft: '2px' }}>*</span>}
+        </label>
+        {children}
+        <FieldError error={errors?.[id]} />
+        {hint && !errors?.[id] && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{hint}</span>
+        )}
+    </div>
+);
+
 const LoginPage = () => {
     const [isRegistering, setIsRegistering] = useState(false);
     const [loginMode, setLoginMode] = useState('user'); // 'user' or 'admin'
@@ -157,19 +171,6 @@ const LoginPage = () => {
         clearErrors();
     };
 
-    // ─── Shared input+error block ───────────────────────────────────────────
-    const Field = ({ id, label, required: req, hint, children }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                {label}{req && <span style={{ color: 'var(--error)', marginLeft: '2px' }}>*</span>}
-            </label>
-            {children}
-            <FieldError error={errors[id]} />
-            {hint && !errors[id] && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{hint}</span>
-            )}
-        </div>
-    );
 
     return (
         <div
@@ -328,7 +329,7 @@ const LoginPage = () => {
                                         className="grid-1-col-md"
                                         style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}
                                     >
-                                        <Field id="name" label="Full Name" required hint="As it appears on your ID card">
+                                        <Field id="name" label="Full Name" required hint="As it appears on your ID card" errors={errors}>
                                             <input
                                                 id="name" type="text" placeholder="e.g. John Doe"
                                                 value={name}
@@ -338,7 +339,7 @@ const LoginPage = () => {
                                             />
                                         </Field>
 
-                                        <Field id="rollNo" label="Roll Number" required hint="e.g. BL.EN.U4CSE21001">
+                                        <Field id="rollNo" label="Roll Number" required hint="e.g. BL.EN.U4CSE21001" errors={errors}>
                                             <input
                                                 id="rollNo" type="text" placeholder="BL.EN.U4..."
                                                 value={rollNo}
@@ -348,7 +349,7 @@ const LoginPage = () => {
                                             />
                                         </Field>
 
-                                        <Field id="dept" label="Department" required>
+                                        <Field id="dept" label="Department" required errors={errors}>
                                             <select
                                                 id="dept" value={dept}
                                                 onChange={(e) => { setDept(e.target.value); clearFieldError('dept'); }}
@@ -368,7 +369,7 @@ const LoginPage = () => {
                                             </select>
                                         </Field>
 
-                                        <Field id="year" label="Year" required>
+                                        <Field id="year" label="Year" required errors={errors}>
                                             <select
                                                 id="year" value={year}
                                                 onChange={(e) => { setYear(e.target.value); clearFieldError('year'); }}
@@ -387,7 +388,7 @@ const LoginPage = () => {
                             </AnimatePresence>
 
                             {/* ── Email ───────────────────────────────────── */}
-                            <Field id="email" label="University Email" required hint="e.g. bl.en.u4cse21@bl.students.amrita.edu">
+                            <Field id="email" label="University Email" required hint="e.g. bl.en.u4cse21@bl.students.amrita.edu" errors={errors}>
                                 <input
                                     id="email" type="email"
                                     placeholder="bl.en.u4...@bl.students.amrita.edu"
@@ -399,7 +400,7 @@ const LoginPage = () => {
                             </Field>
 
                             {/* ── Password ────────────────────────────────── */}
-                            <Field id="password" label="Password" required>
+                            <Field id="password" label="Password" required errors={errors}>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         id="password"
