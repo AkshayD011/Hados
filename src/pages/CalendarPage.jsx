@@ -3,6 +3,8 @@ import { api } from '../services/api';
 import { Calendar as CalendarIcon, Clock, BookOpen, PartyPopper, GraduationCap, Users, AlertTriangle, X } from 'lucide-react';
 import { CalendarSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const typeConfig = {
     Holiday:  { color: '#e74c3c', bg: 'rgba(231, 76, 60, 0.08)',  icon: PartyPopper },
@@ -13,9 +15,11 @@ const typeConfig = {
 };
 
 const CalendarPage = () => {
+    const { isAdmin } = useAuth();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
+    const [seeding, setSeeding] = useState(false);
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -34,14 +38,55 @@ const CalendarPage = () => {
         fetchEvents();
     }, []);
 
+    const handleSeed = async () => {
+        if (!window.confirm("Are you sure you want to clear and re-seed the calendar?")) return;
+        setSeeding(true);
+        const loadingToast = toast.loading('Seeding calendar data...');
+        try {
+            await api.calendar.seedEvents();
+            toast.success('Calendar successfully seeded!', { id: loadingToast });
+            // re-fetch
+            setLoading(true);
+            const data = await api.calendar.getEvents();
+            data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            setEvents(data);
+        } catch (error) {
+            console.error("Seed failed:", error);
+            toast.error("Failed to seed calendar. Check console.", { id: loadingToast });
+        } finally {
+            setSeeding(false);
+        }
+    };
+
     const types = ['All', ...Object.keys(typeConfig)];
     const filtered = filter === 'All' ? events : events.filter(e => e.type === filter);
 
     return (
         <div className="calendar-page animate-fade-in" style={{ paddingBottom: '2rem' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '0.25rem' }}>Academic Calendar</h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Even Semester 2025–26 · Amrita Vishwa Vidyapeetham, Bengaluru</p>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '0.25rem' }}>Academic Calendar</h1>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Even Semester 2025–26 · Amrita Vishwa Vidyapeetham, Bengaluru</p>
+                </div>
+                {isAdmin && (
+                    <button 
+                        onClick={handleSeed}
+                        disabled={seeding}
+                        className="glass"
+                        style={{
+                            padding: '0.5rem 1rem',
+                            borderRadius: '0.5rem',
+                            backgroundColor: 'var(--text-primary)',
+                            color: 'white',
+                            border: 'none',
+                            fontWeight: '600',
+                            fontSize: '0.875rem',
+                            cursor: seeding ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        {seeding ? 'Seeding...' : 'Seed Data (Admin)'}
+                    </button>
+                )}
             </div>
 
             {/* Filter Chips */}
