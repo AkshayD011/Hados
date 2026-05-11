@@ -4,6 +4,7 @@ import TrendingWidget from '../components/common/TrendingWidget';
 import { api } from '../services/api';
 import { FileText, Plus, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { PostSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
@@ -11,6 +12,15 @@ import { FieldError, inputBorderStyle } from '../components/ui/FormField';
 
 const HomePage = () => {
     const { user } = useAuth();
+    const location = useLocation();
+
+    // One-shot toast when redirected from a protected admin route
+    useEffect(() => {
+        if (location.state?.unauthorizedAdmin) {
+            toast.error('Access denied. Admin privileges required.', { duration: 4000, id: 'admin-denied' });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);

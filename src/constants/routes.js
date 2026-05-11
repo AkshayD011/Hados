@@ -8,4 +8,9 @@ export const ROUTES = {
   PLACEMENTOR: '/placementor',
   CALENDAR: '/calendar',
   SAVED: '/saved',
+
+  // ── Admin routes (all nested under /admin) ────────────────────────────────
+  ADMIN:              '/admin',
+  ADMIN_DASHBOARD:    '/admin/dashboard',
+  ADMIN_USERS:        '/admin/users',
 };
