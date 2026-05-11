@@ -17,7 +17,6 @@ export const dbAdminApi = {
             for (const doc of clubsSnap) {
                 await deleteDocument('clubs', doc.id);
             }
-            console.log("Dummy data purged successfully.");
         } catch(e) {
             console.error("Purge failed:", e);
         }

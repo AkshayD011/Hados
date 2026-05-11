@@ -45,17 +45,14 @@ export const lostFoundApi = {
     migrateEmails: async () => {
         try {
             const items = await getCollection('lost_found');
-            let updatedCount = 0;
             for (const item of items) {
                 if (!item.userEmail && item.uid) {
                     const userSnap = await getDocument('users', item.uid);
                     if (userSnap._exists && userSnap.email) {
                         await updateDocument('lost_found', item.id, { userEmail: userSnap.email });
-                        updatedCount++;
                     }
                 }
             }
-            console.log(`Migrated ${updatedCount} posts.`);
             return true;
         } catch (error) {
             console.error("Migration failed:", error);

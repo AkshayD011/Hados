@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import PostCard from '../components/common/PostCard';
 import TrendingWidget from '../components/common/TrendingWidget';
 import { api } from '../services/api';
-import { FileText, Plus, X, Image as ImageIcon, Bell, BellOff } from 'lucide-react';
+import { FileText, Plus, X, Image as ImageIcon, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -82,7 +82,6 @@ const HomePage = () => {
             setImageFile(null);
             fetchPosts(); // Refresh feed
             toast.success('Announcement published successfully!');
-            setTimeout(() => window.location.reload(), 1000); // Quick way to force TrendingWidget to refresh
         } catch (error) {
             console.error("Failed to create post", error);
             toast.error("Failed to publish announcement. Please try again.");

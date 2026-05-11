@@ -13,7 +13,6 @@ export const requestNotificationPermission = async (userUid) => {
         const permission = await Notification.requestPermission();
         
         if (permission === 'granted') {
-            console.log('Notification permission granted.');
             
             // Generate FCM Token
             // The VAPID key is required for some browsers. You can generate one in the Firebase Console.
@@ -22,8 +21,6 @@ export const requestNotificationPermission = async (userUid) => {
             });
             
             if (token) {
-                console.log('FCM Token generated:', token);
-                
                 // Save token to user document
                 await updateDocument('users', userUid, {
                     fcmToken: token,
@@ -52,7 +49,6 @@ export const requestNotificationPermission = async (userUid) => {
  */
 export const onForegroundMessage = (callback) => {
     return onMessage(messaging, (payload) => {
-        console.log('Message received in foreground:', payload);
         if (callback) callback(payload);
     });
 };
