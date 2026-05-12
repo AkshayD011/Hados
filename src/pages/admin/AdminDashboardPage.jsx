@@ -218,7 +218,13 @@ const mockWeekly = (total) => {
 const AdminDashboardPage = () => {
     const { user } = useAuth();
 
-    const [stats, setStats] = useState({ users: 0, posts: 0, clubs: 0, lostFound: 0 });
+    const [stats, setStats] = useState({ 
+        users: 0, 
+        posts: 0, 
+        clubs: 0, 
+        lostFound: 0,
+        clubsBreakdown: { pending: 0, approved: 0, rejected: 0 }
+    });
     const [userList,   setUserList]   = useState([]);
     const [activity,   setActivity]   = useState([]);
     const [loading,    setLoading]    = useState(true);
@@ -246,11 +252,17 @@ const AdminDashboardPage = () => {
             setError('Some collections could not be loaded — check Firestore permissions.');
         }
 
+        // Breakdown clubs by status
+        const pendingClubs = clubs.filter(c => c.status === 'pending').length;
+        const approvedClubs = clubs.filter(c => c.status === 'approved').length;
+        const rejectedClubs = clubs.filter(c => c.status === 'rejected').length;
+
         setStats({
             users:    users.length,
             posts:    posts.length,
             clubs:    clubs.length,
             lostFound:lostFound.length,
+            clubsBreakdown: { pending: pendingClubs, approved: approvedClubs, rejected: rejectedClubs }
         });
         setUserList(users);
 
@@ -361,7 +373,7 @@ const AdminDashboardPage = () => {
                 />
                 <StatCard
                     icon={Users2}       label="Clubs & NGOs"      value={stats.clubs}
-                    sub="Registered organisations"
+                    sub={loading ? '...' : `${stats.clubsBreakdown?.pending || 0} p · ${stats.clubsBreakdown?.approved || 0} a · ${stats.clubsBreakdown?.rejected || 0} r`}
                     color="#8b5cf6"         link={ROUTES.ADMIN_CLUBS}   loading={loading}
                 />
                 <StatCard

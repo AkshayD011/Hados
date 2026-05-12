@@ -186,6 +186,28 @@ const AdminClubsPage = () => {
         finally { setActing(false); }
     };
 
+    const handlePurgeRejected = async () => {
+        const rejected = clubs.filter(c => c.status === CLUB_STATUS.REJECTED);
+        if (rejected.length === 0) {
+            toast.error('No rejected clubs to clean up.');
+            return;
+        }
+        if (!window.confirm(`Permanently delete all ${rejected.length} rejected clubs?`)) return;
+        
+        setActing(true);
+        try {
+            for (const club of rejected) {
+                await clubsApi.deleteClub(club.id);
+            }
+            setClubs(prev => prev.filter(c => c.status !== CLUB_STATUS.REJECTED));
+            toast.success(`Cleaned up ${rejected.length} clubs.`);
+        } catch {
+            toast.error('Failed to complete cleanup.');
+        } finally {
+            setActing(false);
+        }
+    };
+
     const byTab = clubs.filter(c => c.status === tab);
     const counts = {
         [CLUB_STATUS.PENDING]:  clubs.filter(c => c.status === CLUB_STATUS.PENDING).length,
@@ -218,9 +240,14 @@ const AdminClubsPage = () => {
                         </div>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', margin: 0 }}>Approve and manage campus club submissions</p>
                     </div>
-                    <button onClick={fetchClubs} disabled={loading} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', fontSize: 'var(--text-sm)' }}>
-                        <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.625rem' }}>
+                        <button onClick={handlePurgeRejected} disabled={loading || acting} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', fontSize: 'var(--text-sm)', color: 'var(--error)' }}>
+                            <Trash2 size={14} /> Clean Up
+                        </button>
+                        <button onClick={fetchClubs} disabled={loading} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', fontSize: 'var(--text-sm)' }}>
+                            <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {/* Error */}
