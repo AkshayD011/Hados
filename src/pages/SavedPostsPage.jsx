@@ -4,6 +4,7 @@ import PostCard from '../components/common/PostCard';
 import { Bookmark, Home } from 'lucide-react';
 import { PostSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import { useAuth } from '../context/AuthContext';
 
 const SavedPostsPage = () => {
     const { user } = useAuth();
@@ -12,9 +13,12 @@ const SavedPostsPage = () => {
 
     useEffect(() => {
         const fetchSaved = async () => {
-            if (!user) return;
+            if (!user) {
+                setLoading(false);
+                return;
+            }
             try {
-                // Fetch posts with userId to include bookmark status
+                // Fetch posts with bookmark state for the current user
                 const data = await api.feed.getPosts(user.uid);
                 setSavedPosts(data.filter(post => post.bookmarked));
             } catch (error) {

@@ -45,6 +45,8 @@ const PostCard = ({ post }) => {
         }
     };
 
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
     const handleReport = () => { setMenuOpen(false); setReportOpen(true); };
 
     return (
@@ -124,11 +126,19 @@ const PostCard = ({ post }) => {
 
                 {/* ── Image ───────────────────────────────────────────────── */}
                 {post.imageUrl ? (
-                    <img
-                        src={post.imageUrl}
-                        alt="Post media"
-                        style={{ width: '100%', maxHeight: '320px', objectFit: 'cover', borderRadius: 'var(--radius-lg)', marginBottom: '1.125rem', border: '1px solid var(--border)' }}
-                    />
+                    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-lg)', marginBottom: '1.125rem', border: '1px solid var(--border)' }}>
+                        <img
+                            src={post.imageUrl}
+                            alt="Post media"
+                            onClick={() => setIsFullscreen(true)}
+                            style={{ 
+                                width: '100%', maxHeight: '320px', objectFit: 'cover', 
+                                cursor: 'zoom-in', transition: 'transform 0.3s ease'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                        />
+                    </div>
                 ) : (
                     <div style={{ width: '100%', height: '192px', backgroundColor: 'var(--surface-hover)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.125rem', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }}>
                         <ImageIcon size={40} style={{ opacity: 0.25 }} />
@@ -170,6 +180,38 @@ const PostCard = ({ post }) => {
                     </button>
                 </div>
             </div>
+
+            {/* Fullscreen Image Overlay */}
+            {isFullscreen && (
+                <div 
+                    onClick={() => setIsFullscreen(false)}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                        backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 2000,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        backdropFilter: 'blur(8px)', cursor: 'zoom-out',
+                        padding: '2rem'
+                    }}
+                >
+                    <img 
+                        src={post.imageUrl} 
+                        alt="Fullscreen preview" 
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)' }}
+                    />
+                    <button 
+                        onClick={() => setIsFullscreen(false)}
+                        style={{
+                            position: 'absolute', top: '1.5rem', right: '1.5rem',
+                            backgroundColor: 'white', color: 'black', border: 'none',
+                            borderRadius: '50%', width: '40px', height: '40px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', fontWeight: 'bold', fontSize: '1.2rem'
+                        }}
+                    >
+                        &times;
+                    </button>
+                </div>
+            )}
 
             {/* Report modal */}
             <ReportModal
