@@ -82,5 +82,28 @@ export const feedApi = {
             console.error("Error creating post:", error);
             throw error;
         }
+    },
+
+    /** Alias used by the admin panel to fetch all posts */
+    getFeed: async () => {
+        try {
+            return await getCollection('posts', [
+                createQueryConstraint.orderBy('timestamp', 'desc')
+            ]);
+        } catch (error) {
+            console.error("Error fetching feed:", error);
+            throw error;
+        }
+    },
+
+    /** Delete a post by ID */
+    deletePost: async (postId) => {
+        try {
+            await deleteDocument('posts', postId);
+            return { success: true };
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            throw error;
+        }
     }
 };

@@ -6,14 +6,16 @@ import { PostSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 
 const SavedPostsPage = () => {
+    const { user } = useAuth();
     const [savedPosts, setSavedPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSaved = async () => {
+            if (!user) return;
             try {
-                // To keep it simple, we just fetch all posts and filter bookmarked ones from the mock API
-                const data = await api.feed.getPosts();
+                // Fetch posts with userId to include bookmark status
+                const data = await api.feed.getPosts(user.uid);
                 setSavedPosts(data.filter(post => post.bookmarked));
             } catch (error) {
                 console.error("Failed to fetch saved posts", error);
@@ -23,7 +25,7 @@ const SavedPostsPage = () => {
         };
 
         fetchSaved();
-    }, []);
+    }, [user]);
 
     return (
         <div className="saved-posts-page animate-fade-in" style={{ paddingBottom: '2rem' }}>

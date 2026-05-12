@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../services/api';
 import { Search, Plus, Filter, MapPin, Clock, Tag, X, Mail, PackageSearch } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LostItemSkeleton } from '../components/ui/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 import { FieldError, inputBorderStyle } from '../components/ui/FormField';
+import { lostFoundApi, LF_STATUS } from '../services/api/lostFound.api';
+import toast from 'react-hot-toast';
 
 const LostFoundPage = () => {
     const { user } = useAuth();
@@ -27,7 +28,8 @@ const LostFoundPage = () => {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const data = await api.lostFound.getItems();
+            // Public page only shows approved items
+            const data = await lostFoundApi.getItemsByStatus(LF_STATUS.APPROVED);
             setItems(data);
         } catch (error) {
             console.error("Failed to fetch lost/found items", error);
@@ -38,7 +40,7 @@ const LostFoundPage = () => {
 
     useEffect(() => {
         const initialize = async () => {
-            await api.lostFound.migrateEmails();
+            await lostFoundApi.migrateEmails();
             fetchItems();
         };
         initialize();
@@ -61,7 +63,7 @@ const LostFoundPage = () => {
                 uid: user?.uid,
                 userEmail: user?.email || null
             };
-            await api.lostFound.reportItem(itemToReport, imageFile);
+            await lostFoundApi.reportItem(itemToReport, imageFile);
             setShowReportModal(false);
             setReportData({
                 title: '',
@@ -72,6 +74,7 @@ const LostFoundPage = () => {
             });
             setImageFile(null);
             fetchItems(); // Refresh feed
+            toast.success('Report submitted! It will appear after admin approval.');
         } catch (error) {
             console.error("Error reporting item", error);
         } finally {
@@ -82,7 +85,7 @@ const LostFoundPage = () => {
     const handleDelete = async (itemId) => {
         if (!window.confirm('Are you sure you want to delete this post?')) return;
         try {
-            await api.lostFound.deleteItem(itemId);
+            await lostFoundApi.deleteItem(itemId);
             setItems(items.filter(item => item.id !== itemId));
         } catch (error) {
             console.error("Failed to delete item", error);
